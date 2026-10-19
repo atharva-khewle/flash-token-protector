@@ -37,7 +37,7 @@ jobs:
         run: npm run e2e:web
       - name: Extension in a real browser
         # Extensions need a real (virtual) display on Linux CI.
-        run: xvfb-run -a env HEADED=1 npm run e2e:ext
+        run: xvfb-run -a env HEADED=1 DEBUG=pw:browser npm run e2e:ext
       - uses: actions/upload-artifact@v4
         if: always()
         with:
