@@ -10,6 +10,16 @@ It never holds keys, never asks for a signature and never connects a wallet. It 
 
 > It never says "safe". **VERIFIED** means one thing: canonical USDT reached your address in a final block, and two independent RPC providers agree on it. For deposits to Binance, the final truth is always your **Binance deposit history**.
 
+## Use it
+
+| | |
+|---|---|
+| **Website** | <https://flash-token-protector.pages.dev> *(Cloudflare Pages; link updated after deploy)* |
+| **Chrome extension** | [Download the zip](https://github.com/atharva-khewle/flash-token-protector/releases/latest/download/flash-token-protector-extension.zip) → unzip → `chrome://extensions` → turn on **Developer mode** → **Load unpacked** → pick the unzipped folder. Details and permissions: [`docs/EXTENSION.md`](docs/EXTENSION.md) |
+| **Proof it works** | [`docs/PROOF.md`](docs/PROOF.md): 31 attack scenarios built with real transactions on a local chain, plus real-browser tests of the site and the extension. One command reruns them. |
+
+Bookmark the real site. Clones of checker sites exist, and a clone that always says VERIFIED is itself an attack (F32d).
+
 - [How it works](#how-it-works)
 - [Attack vectors (Phase 1)](#attack-vectors)
 - [Chained attacks](#chained-attacks)
@@ -215,20 +225,31 @@ Full mapping, vector → layer → rule → test: [`docs/THREAT_MATRIX.md`](docs
 
 ```bash
 npm ci
-npm run dev          # http://localhost:5173 (the explorer proxy is not available in plain vite dev)
-npm test             # unit tests (verdict rules, input, registry, L6, wallet, security)
-LIVE=1 npx vitest run tests/live.test.ts   # optional: hits real mainnet RPCs
-npm run build        # typecheck + production build into dist/
+npm run dev              # http://localhost:5173 (the explorer proxy is not available in plain vite dev)
+npm test                 # 125+ unit and bundle tests: verdict rules, input, registry, L6, wallet, extension logic, release-bundle hygiene
+npm run build            # typecheck + production build into dist/
+npm run ext:build        # extension -> extension/dist and extension/flash-token-protector-extension.zip
 ```
+
+End-to-end (needs [Foundry](https://getfoundry.sh) and a Chromium; details in [`docs/PROOF.md`](docs/PROOF.md#reproduce)):
+
+```bash
+npm run e2e              # 31 attack scenarios against a fresh local Anvil chain
+npm run e2e:web          # the website in a real browser, every scenario entered into the real form
+npm run e2e:ext          # the extension loaded unpacked in a real browser
+LIVE=1 npx vitest run tests/live.test.ts   # optional: real BSC / Tron mainnet reads
+```
+
+**Test mode.** `npm run dev:test` / `npm run build:test` build the site with a local test chain and a mock USDT (chainId 31337) so you can try every attack by hand: start `anvil --hardfork prague`, run `npm run deploy:local`, then `npm run dev:test`. The test chain only exists in `--mode testnet` builds. A test checks that the production site and the release extension contain none of it.
+
+**Test contracts** (`contracts/`) refuse to deploy anywhere except chainId 31337 (local) and 97 (BSC testnet): in the deploy script and in every constructor. Do not remove that.
 
 Fixtures in `tests/fixtures/` are real mainnet data:
 
 - `bsc-real-swap-receipt.json`: [BscScan](https://bscscan.com/tx/0x7b3aaee409a3d2e55fd363afe9a1b1a8efa4b45d805502dcf9825a2430f935ec), a swap with a canonical USDT leg and a non-USDT token leg
 - `tron-real-usdt-info.json`: [Tronscan](https://tronscan.org/#/transaction/f4de16c6a7c695b249f1fc958b694a7ea532ef0f814966c6e5fa34211414c75a), 30,194.5 USDT
 
-Everything else in the tests is **synthetic**: receipts built in `tests/helpers.ts` with obviously fake addresses (`0x1111…`, `0xfa4e…`). No real fake-token or poisoning tx hashes are included, because none could be confirmed from a primary source while writing this. Add real examples with their explorer links as you find them.
-
-Fork tests with `anvil --fork-url <BSC RPC>` (deploy test fake/honeypot/proxy tokens **only on the local fork**) are optional and not included yet.
+Unit-test receipts are **synthetic** (`tests/helpers.ts`, obviously fake addresses). The end-to-end scenarios use real transactions on a local chain instead. No real fake-token or poisoning mainnet tx is included, because none could be confirmed from a primary source while writing this.
 
 ## Hard rules this project follows
 

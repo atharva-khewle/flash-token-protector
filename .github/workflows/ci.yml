@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm audit --audit-level=high
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: npm ci
+      - run: npx playwright-core install --with-deps chromium
+      - name: 31 attack scenarios on a local Anvil chain
+        run: npm run e2e
+      - name: Website UI in a real browser
+        run: npm run e2e:web
+      - name: Extension in a real browser
+        run: npm run e2e:ext
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: proof
+          path: docs/proof

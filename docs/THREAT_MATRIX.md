@@ -2,6 +2,8 @@
 
 One row per vector from the README's [attack-vector list](../README.md#attack-vectors). Each row gives the layer(s) that catch the vector, the exact rule, and the test that proves it. Test names are the `it(...)` titles, prefixed with their file under `tests/`.
 
+Most rows are also built with real transactions on a local chain: the scenario ids in [`PROOF.md`](PROOF.md) start with the vector id (for example `C14-mixed`, `D21-zero-value`). Those scenarios run the same services the website and extension use.
+
 Rows marked **Residual** are not (fully) detectable by this tool. They are listed in the README's [Residual risk](../README.md#residual-risk) section.
 
 Check IDs (`L1.consensus` etc.) are the `id` fields produced by `src/verdict/verifyTx.ts`.
