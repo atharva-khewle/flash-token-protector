@@ -36,3 +36,29 @@ The real BSC USDT contract is `0x55d398326f99059fF775485246999027B3197955` ([Bsc
 - The same cases run automatically with `LIVE=1 npx vitest run tests/live-fake.test.ts` (read-only, no funds).
 - To find fresh ones: `node scripts/find-fake-usdt.ts 80` lists recent non-canonical tokens named like USDT, each with a sample tx hash. Check the contract before trusting the label, since legitimate wrapped or bridged tokens (for example Venus `vUSDT`) also match.
 - The "wallet scan" tab cannot list fake tokens sent to an address without an explorer API key; use Verify tx with a hash.
+
+## More fake "USDT" tokens (found 2026-10-19, expected FAKE USDT)
+
+Found with `node scripts/find-bad-bsc.ts 300`. In the **Check token** tab each contract gives **FAKE USDT**. Pasting the tx into **Analyze tx** gives **FAKE USDT FOUND** and "No real USDT moved".
+
+| Token as shown | Contract | Example tx |
+|---|---|---|
+| `USDT` / "Tether USD" (address ends in `8888`, same look as the first fake above) | `0x11aeb9dbaf3b5d0d944e5bf351f2cd3514598888` | `0xf7a76aea5c7acc221997ee7d2b6e08f4bbf5c1a7812b039ab5fe28f3e70d0647` |
+| `USDT.z` / "USDT.z" | `0x2b963af25bef74337c7bdd67d01b4a53153080d5` | `0xcfab4a29ed9c515060362fa60e7f863b7433f3e1a91fa48850a0eecc0acc7a70` |
+| `USDT.z` / "ZENON USDT" | `0xa64a8f8d3bee0bd3180544bf9ab6023708479786` | `0x26aebf9f43022e19352ad33e9450d380b321a0b6d31cce3b8eb7a1ef7d5d5ea4` |
+| `USDTC` / "Universal Stable Dollar Token Community" | `0x9bd1a819e773a5a7d0dde4799056d55858ace0be` | `0x0f034520a8d81772d4e264d760f29181d713c33748f3680f4c5c566b329be4ea` |
+| `USDT.z` / "Tether USD Bridged ZED20" | `0x4be35ec329343d7d9f548d42b0f8c17fffe07db4` and `0x231e782591e0b1fbdfc2fc58f735fcb30953a30c` | `0x10f3c34b9b685a7aec51527112ee75715cca2c68f86dee0a82bb75e4dafc72d2` |
+
+"Fake" here means: not the canonical USDT contract but calls itself USDT/Tether. It does not claim the creator meant harm, and some bridged or wrapped tokens are legitimate products. Never treat one as USDT.
+
+## Address poisoning (expected: PROBLEMS FOUND, "Zero-value transfer" warnings)
+
+Real USDT zero-value transfers where the "from" address did not sign the transaction. This is how lookalike addresses get planted in a victim's history.
+
+| What | Tx hash | Signed by |
+|---|---|---|
+| One transaction that makes 22 zero-value USDT transfers between unrelated addresses, for example `0x1246ad61c989ca67ccb77e2634c7c21fef02ac0d` → `0x451eb79dfb53c87c1a99bc2ad0c768972356613c` | `0x0b6acf5385887ae4063d140e118a2d15d9ec141eccae3b6282d06412364dbcc3` | `0x2574d10f5f8ebbfe3235f8aac6218087d5e95999` (sent it to contract `0x238d6d51c64aefe9f4dda9b456029f9a671435ba`) |
+
+The signer above is an address observed doing this on chain. It is not from an official blocklist, and a batch contract can also be used for harmless reasons, so treat it as an example of the pattern, not a verdict about a person.
+
+Dust is common too: in the same scan thousands of real-USDT transfers under 0.01 USDT showed up, many from batch tools. The wallet tab marks these "Dust".
