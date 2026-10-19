@@ -4,12 +4,14 @@ import { h, link } from './dom'
 import { scanTab } from './scanTab'
 import { sendTab } from './sendTab'
 import { tokenTab } from './tokenTab'
+import { txTab } from './txTab'
 import { verifyTab } from './verifyTab'
 import './style.css'
 
 const REPO = 'https://github.com/atharva-khewle/flash-token-protector'
 
 const TABS = [
+  { id: 'tx', label: 'Analyze tx', make: () => txTab() },
   { id: 'verify', label: 'Verify tx', make: () => verifyTab() },
   { id: 'token', label: 'Check token', make: () => tokenTab() },
   { id: 'scan', label: 'Scan wallet', make: () => scanTab(() => undefined) },
@@ -75,7 +77,7 @@ function applyQuery(): void {
     document.getElementById(`tabbtn-${tab}`)?.click()
     fill(document.querySelectorAll<HTMLInputElement>(`#tab-${tab} form input`))
   }
-  if (isHash) go('verify', (i) => void (i[0]!.value = q))
+  if (isHash) go('tx', (i) => void (i[0]!.value = q))
   else if (isAddr) go('send', (i) => void (i[0]!.value = q))
 }
 

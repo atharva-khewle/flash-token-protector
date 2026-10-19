@@ -133,6 +133,29 @@ describe('website (testnet build) in a real browser', () => {
     await page.screenshot({ path: join(SHOTS, 'token-fake.png'), fullPage: true })
   })
 
+  it('Analyze tx tab: only a hash and a chain, finds the fake and the real token by itself', async () => {
+    await page.goto(`http://127.0.0.1:${PORT}/`)
+    await page.locator('#tabbtn-tx').click()
+    const form = page.locator('#tab-tx form')
+    await form.locator('select').selectOption('local')
+    const head = page.locator('#tab-tx .verdict .badge')
+    const cases: [string, string][] = [
+      ['baseline', 'NO RED FLAGS'],
+      ['A1-fake-tether', 'FAKE USDT FOUND'],
+      ['C14-mixed', 'FAKE USDT FOUND'],
+      ['A7-url-name', 'FAKE USDT FOUND'],
+    ]
+    for (const [id, want] of cases) {
+      await form.locator('input').fill(outcomes.get(id)!.ui!.hash!)
+      await form.locator('button[type=submit]').click()
+      await expect.poll(() => head.textContent(), { timeout: 30_000, message: id }).toBe(want)
+      if (id === 'A1-fake-tether') {
+        await expect.poll(() => page.locator('#tab-tx .result').textContent()).toContain('No real USDT moved')
+        await page.screenshot({ path: join(SHOTS, 'analyze-fake.png'), fullPage: true })
+      }
+    }
+  })
+
   it('check-before-sending flags a lookalike of a saved address (no chain call needed for the verdict)', async () => {
     await page.goto(`http://127.0.0.1:${PORT}/`)
     await page.locator('#tabbtn-scan').click()

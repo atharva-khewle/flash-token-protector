@@ -345,6 +345,19 @@ button.link {
   color: var(--warn);
 }
 
+.risk-ok {
+  color: var(--ok);
+}
+
+.risk-info {
+  color: var(--muted);
+}
+
+.tokenblock {
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+}
+
 .tag {
   font-family: var(--mono);
   font-size: 11px;

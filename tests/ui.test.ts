@@ -9,17 +9,24 @@ beforeAll(async () => {
 })
 
 describe('UI', () => {
-  it('renders four tabs and shows the verify tab first', () => {
+  it('renders five tabs and shows the analyze tab first', () => {
     const tabs = [...document.querySelectorAll('[role=tab]')].map((b) => b.textContent)
-    expect(tabs).toEqual(['Verify tx', 'Check token', 'Scan wallet', 'Check before sending'])
-    expect((document.getElementById('tab-verify') as HTMLElement).hidden).toBe(false)
+    expect(tabs).toEqual(['Analyze tx', 'Verify tx', 'Check token', 'Scan wallet', 'Check before sending'])
+    expect((document.getElementById('tab-tx') as HTMLElement).hidden).toBe(false)
     expect((document.getElementById('tab-scan') as HTMLElement).hidden).toBe(true)
   })
 
   it('switches tabs', () => {
     ;(document.getElementById('tabbtn-send') as HTMLButtonElement).click()
     expect((document.getElementById('tab-send') as HTMLElement).hidden).toBe(false)
-    ;(document.getElementById('tabbtn-verify') as HTMLButtonElement).click()
+    ;(document.getElementById('tabbtn-tx') as HTMLButtonElement).click()
+  })
+
+  it('analyze tab refuses a malformed hash', () => {
+    const tab = document.getElementById('tab-tx')!
+    ;(tab.querySelector('input') as HTMLInputElement).value = '0x1234'
+    tab.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(tab.querySelector('.error')!.textContent).toMatch(/64 hex/)
   })
 
   it('refuses a malformed hash with a readable reason (L0)', () => {

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { createPublicClient, http, type Hex } from 'viem'
 import { bsc } from 'viem/chains'
 import { runTokenCheck } from '../src/services/tokenCheck'
+import { runTxReport } from '../src/services/txReport'
 import { runVerify } from '../src/services/verify'
 
 const live = !!process.env.LIVE
@@ -61,5 +62,21 @@ describe.skipIf(!live)('live BSC: fake USDT in the wild', () => {
       console.log(`${label}: ${r.verdict} (${r.symbol ?? '-'} / ${r.name ?? '-'})`)
       expect(r.verdict, label).toBe(want)
     }
+  })
+
+  it('tx-only report: fakes flagged, real transfer clean, unknown hash not on chain', { timeout: 120_000 }, async () => {
+    const cases: [string, string, string][] = [
+      ...FAKES.map((f): [string, string, string] => [f.label, f.hash, 'FAKE USDT FOUND']),
+      ['real 230 USDT transfer', '0xbe11c35efabcfd7e8ae8f349cb90395a4d3d4200de6de2b567fa374b4361b869', 'NO RED FLAGS'],
+      ['unknown hash', `0x${'00'.repeat(31)}01`, 'NOT ON CHAIN'],
+    ]
+    for (const [label, hash, want] of cases) {
+      const r = await runTxReport({ chain: 'bsc', hash, hiddenChars: 0 })
+      console.log(`${label}: ${r.headline}\n` + r.problems.map((p) => `   [${p.level}] ${p.text}`).join('\n'))
+      expect(r.headline, label).toBe(want)
+    }
+    const swap = await runTxReport({ chain: 'bsc', hash: '0x7b3aaee409a3d2e55fd363afe9a1b1a8efa4b45d805502dcf9825a2430f935ec', hiddenChars: 0 })
+    console.log(`swap: ${swap.headline}, ${swap.tokens.length} tokens, ${swap.parties.length} addresses`)
+    expect(swap.tokens.some((t) => t.verdict === 'REAL USDT')).toBe(true)
   })
 })

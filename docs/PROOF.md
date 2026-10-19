@@ -74,6 +74,7 @@ Both run in a real Chromium, driving the real UI.
 - [`C20-block-hash.png`](proof/website/C20-block-hash.png)
 - [`D21-zero-value.png`](proof/website/D21-zero-value.png)
 - [`E25-7702.png`](proof/website/E25-7702.png)
+- [`analyze-fake.png`](proof/website/analyze-fake.png)
 - [`baseline.png`](proof/website/baseline.png)
 - [`send-lookalike.png`](proof/website/send-lookalike.png)
 - [`token-fake.png`](proof/website/token-fake.png)

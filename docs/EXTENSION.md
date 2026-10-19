@@ -15,7 +15,7 @@ To check the zip against the source: `npm ci && npm run ext:build` builds `exten
 
 | Where | What | Vectors |
 |---|---|---|
-| Toolbar popup | The tabs of the website: Verify tx, Check token, Scan wallet, Check before sending | all |
+| Toolbar popup | The tabs of the website: Analyze tx, Verify tx, Check token, Scan wallet, Check before sending | all |
 | BscScan / Etherscan pages | Badges next to token links: **✓ real USDT contract** for the canonical one, **✗ NOT USDT** for any other contract that calls itself USDT/Tether (also catches homoglyph names). Addresses that imitate one of yours get **⚠ lookalike of your …** | A1, A2, C13, D22 |
 | Binance, BscScan, Etherscan, Tronscan | **Paste guard.** When you paste an address: red banner with a character diff if it imitates a saved address; red banner if it is *not* the address you just copied (clipboard-hijacking malware); green if it is exactly a saved one; amber for a new address. It never blocks the paste | D23, E43 |
 | Any page | Select a hash or address → right-click → **Check selection with Flash Token Protector** opens the popup with it filled in | all |
