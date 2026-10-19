@@ -106,6 +106,10 @@ ${shots('extension')}
 - **A real clipboard-hijacker**: simulated by writing different text to the clipboard from another origin after a copy.
 - **Wallet-signature interception** (approve / permit / 7702 prompts inside the wallet): not built.
 
+## Continuous integration
+
+Everything above also runs on GitHub Actions for every push ([workflow](../.github/workflows/ci.yml)): unit and bundle tests, the 31 scenarios on a fresh Anvil chain, the website in a browser, and the extension in a browser under a virtual display. The two popup tests that read real BSC mainnet are skipped there, because public RPCs sometimes refuse datacenter IPs and one provider's answer is (correctly) not enough for VERIFIED. They run locally.
+
 ## Reproduce
 
 \`\`\`bash
