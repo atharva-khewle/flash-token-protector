@@ -112,3 +112,36 @@ export function addRecent(chain: ChainKey, addresses: string[]): void {
   const merged = [...new Set([...addresses, ...(s.recent[chain] ?? [])])].slice(0, 200)
   save({ ...s, recent: { ...s.recent, [chain]: merged } })
 }
+
+// ---------- The address the "My wallet" tab follows (optional) ----------
+
+const ACCOUNT_KEY = 'ftp.account'
+
+export interface Account {
+  chain: ChainKey
+  /** Hex form (lowercase 0x + 40 hex; Tron: 20-byte body). */
+  address: string
+  /** 'wallet' = read from a connected wallet; 'watch' = pasted by the user. */
+  via: 'wallet' | 'watch'
+}
+
+export function getAccount(): Account | null {
+  try {
+    const raw = window.localStorage.getItem(ACCOUNT_KEY)
+    if (!raw) return null
+    const a = JSON.parse(raw) as Partial<Account>
+    if (a && typeof a.address === 'string' && typeof a.chain === 'string' && (a.via === 'wallet' || a.via === 'watch')) return a as Account
+  } catch {
+    /* storage unavailable */
+  }
+  return null
+}
+
+export function setAccount(a: Account | null): void {
+  try {
+    if (a) window.localStorage.setItem(ACCOUNT_KEY, JSON.stringify(a))
+    else window.localStorage.removeItem(ACCOUNT_KEY)
+  } catch {
+    /* storage unavailable: not remembered */
+  }
+}

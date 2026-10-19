@@ -127,6 +127,52 @@ export class EvmAdapter implements ChainAdapter {
     return this.info.logChunk
   }
 
+  /** Latest block number only (cheap; used by the live watcher). */
+  async getHead(): Promise<bigint> {
+    return BigInt((await this.any((r) => r('eth_blockNumber', []))) as string)
+  }
+
+  /**
+   * Every log of one block, grouped by tx, via eth_getBlockReceipts. Returns null when no provider
+   * supports the method, so the caller can fall back to address-filtered queries.
+   */
+  async getBlockLogs(block: bigint): Promise<{ txHash: string; logs: LogEntry[] }[] | null> {
+    try {
+      const rs = (await this.any((r) => r('eth_getBlockReceipts', [`0x${block.toString(16)}`]))) as
+        | { transactionHash: string; status?: string; logs: RawLog[] }[]
+        | null
+      if (!rs) return null
+      return rs
+        .filter((x) => x.status !== '0x0')
+        .map((x) => ({
+          txHash: x.transactionHash.toLowerCase(),
+          logs: x.logs.map((l) => ({
+            address: lc(l.address),
+            topics: l.topics.map(lc),
+            data: lc(l.data),
+            logIndex: Number(l.logIndex),
+            txHash: x.transactionHash.toLowerCase(),
+            blockNumber: block,
+          })),
+        }))
+    } catch {
+      return null
+    }
+  }
+
+  /** Transactions the address has broadcast that are not mined yet (pending nonce minus latest nonce). */
+  async getPendingCount(address: Hex): Promise<number | null> {
+    try {
+      const [pending, latest] = await Promise.all([
+        this.any((r) => r('eth_getTransactionCount', [address, 'pending'])),
+        this.any((r) => r('eth_getTransactionCount', [address, 'latest'])),
+      ])
+      return Math.max(0, Number(BigInt(pending as string) - BigInt(latest as string)))
+    } catch {
+      return null
+    }
+  }
+
   async getCode(address: Hex): Promise<Hex> {
     return lc((await this.any((r) => r('eth_getCode', [address, 'latest']))) as string)
   }

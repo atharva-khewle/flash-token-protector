@@ -1,22 +1,37 @@
 import { hydrateFromExtension } from '../lib/storage'
 import { familyOfAddress } from '../lib/input'
 import { h, link } from './dom'
+import { faqTab } from './faqTab'
 import { scanTab } from './scanTab'
 import { sendTab } from './sendTab'
 import { tokenTab } from './tokenTab'
 import { txTab } from './txTab'
 import { verifyTab } from './verifyTab'
+import { walletTab } from './walletTab'
 import './style.css'
+import './soft.css'
 
 const REPO = 'https://github.com/atharva-khewle/flash-token-protector'
 
 const TABS = [
   { id: 'tx', label: 'Analyze tx', make: () => txTab() },
+  { id: 'wallet', label: 'My wallet', make: () => walletTab() },
   { id: 'verify', label: 'Verify tx', make: () => verifyTab() },
   { id: 'token', label: 'Check token', make: () => tokenTab() },
   { id: 'scan', label: 'Scan wallet', make: () => scanTab(() => undefined) },
   { id: 'send', label: 'Check before sending', make: () => sendTab() },
+  { id: 'faq', label: 'Help', make: () => faqTab() },
 ] as const
+
+/** Extension popup only: the same app in a full browser tab, which has room for history and reports. */
+function openInTab(): HTMLElement | null {
+  if (typeof chrome === 'undefined' || !chrome.runtime?.id || new URLSearchParams(location.search).has('tab')) return null
+  const b = h('button', { type: 'button' }, 'Open in a tab')
+  b.addEventListener('click', () => {
+    window.open(chrome.runtime.getURL('popup.html?tab=1'), '_blank', 'noopener')
+  })
+  return b
+}
 
 function mount(root: HTMLElement, banner: HTMLElement | null): void {
   const panels = TABS.map((t) => {
@@ -44,8 +59,8 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     h(
       'header',
       { class: 'top' },
-      h('h1', {}, 'Flash Token Protector'),
-      h('p', { class: 'tagline' }, 'Is this USDT real? Read-only checks against the chain. No wallet connection, no signatures, no keys.'),
+      h('div', { class: 'toprow' }, h('h1', {}, 'Flash Token Protector'), openInTab()),
+      h('p', { class: 'tagline' }, 'Is this USDT real? Read-only checks against the chain. No keys, no signatures. Connecting a wallet is optional.'),
       h('p', { class: 'domain' }, 'You are on ', h('strong', {}, location.host || 'local file'), '. Bookmark it. Clones of checker sites exist.'),
     ),
     h('nav', { class: 'tabs', role: 'tablist' }, ...buttons),
@@ -54,6 +69,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
       'footer',
       { class: 'foot' },
       h('p', {}, 'This tool never says "safe". VERIFIED means: canonical USDT reached your address in a final block, as reported by two independent RPC providers.'),
+      h('p', {}, 'Connecting a wallet is optional and read-only: the app only asks which account is selected, never for a signature, a transaction or a spending approval.'),
       h('p', {}, 'It cannot see fiat chargebacks, a compromised device, or anything off-chain. Never share a seed phrase. Nobody legitimate needs it.'),
       h('p', {}, link(REPO, 'Source code and test evidence'), ' · ', link(`${REPO}/releases/latest`, 'Chrome extension'), ' · ', link(`${REPO}/blob/main/docs/PROOF.md`, 'Proof of work')),
     ),

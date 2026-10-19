@@ -11,7 +11,7 @@ import { createServer, type ViteDevServer } from 'vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { deployAll } from '../scripts/deploy-test-contracts'
 import { registerLocal } from '../src/testnet'
-import { makeCtx, startAnvil, type Anvil } from './chain'
+import { E18, makeCtx, startAnvil, tokenAbi, type Anvil, type Ctx } from './chain'
 import { scenarios, type Outcome } from './scenarios'
 
 const ROOT = process.cwd()
@@ -36,6 +36,7 @@ const SCAN_EXPECT: Record<string, string> = {
 const SHOT_IDS = new Set(['baseline', 'A1-fake-tether', 'B9-honeypot', 'C14-mixed', 'C20-block-hash', 'D21-zero-value', 'E25-7702'])
 
 let deployed: Awaited<ReturnType<typeof deployAll>>
+let chainCtx: Ctx
 
 beforeAll(async () => {
   if (!existsSync(CHROME)) throw new Error('Chromium not found. Set FTP_CHROMIUM or run: npx playwright-core install chromium')
@@ -44,6 +45,7 @@ beforeAll(async () => {
   deployed = d
   registerLocal(d)
   const ctx = await makeCtx(d)
+  chainCtx = ctx
   for (const s of scenarios) {
     if (s.id === 'SAFETY-test-only-contracts' || s.id === 'A5-chain-confusion') continue
     outcomes.set(s.id, await s.run(ctx))
@@ -154,6 +156,77 @@ describe('website (testnet build) in a real browser', () => {
         await page.screenshot({ path: join(SHOTS, 'analyze-fake.png'), fullPage: true })
       }
     }
+  })
+
+  it('My wallet: follows an address, shows balance and history, and catches a new fake token live', async () => {
+    const B = deployed.accounts!.B_receiver!
+    await page.goto(`http://127.0.0.1:${PORT}/`)
+    await page.locator('#tabbtn-wallet').click()
+    await page.locator('#tab-wallet .pill[data-chain=local]').click()
+    await page.locator('#tab-wallet input[type=text]').first().fill(B)
+    await page.locator('#tab-wallet form button[type=submit]').click()
+
+    await expect.poll(() => page.locator('#tab-wallet .account').count(), { timeout: 30_000 }).toBe(1)
+    await expect.poll(() => page.locator('#tab-wallet .histrow').count(), { timeout: 30_000 }).toBeGreaterThan(0)
+    await expect.poll(() => page.locator('#tab-wallet .balnum').textContent(), { timeout: 30_000 }).not.toBe('…')
+    await expect.poll(() => page.locator('#tab-wallet .livestatus').textContent(), { timeout: 30_000 }).toContain('Live')
+    // Old fake-token rows from the earlier scenarios are marked for attention.
+    await expect.poll(() => page.locator('#tab-wallet .attention').count(), { timeout: 30_000 }).toBe(1)
+
+    // A brand-new fake token lands while the page is open.
+    await chainCtx.call('M', deployed.tokens.fakeUsdt!, tokenAbi, 'mint', [B, 1234n * E18])
+    await expect.poll(() => page.locator('#tab-wallet .alert').first().textContent(), { timeout: 30_000 }).toContain('FAKE')
+    await page.screenshot({ path: join(SHOTS, 'wallet-live-fake.png'), fullPage: true })
+
+    // Tapping a row opens the full analysis.
+    await page.locator('#tab-wallet .histrow').first().click()
+    await expect.poll(() => page.locator('#tab-wallet .detailcard').textContent(), { timeout: 30_000 }).toContain('FAKE USDT FOUND')
+    await page.screenshot({ path: join(SHOTS, 'wallet-detail.png'), fullPage: true })
+
+    // Filter and pay-check controls work.
+    await page.locator('#tab-wallet .filter', { hasText: 'Needs a look' }).click()
+    expect(await page.locator('#tab-wallet .histrow').count()).toBeGreaterThan(0)
+    await page.locator('#tab-wallet .paycheck input').fill('0xa1b2c3d4e5f60718293a4b5c6d7e8f9012345678')
+    await page.locator('#tab-wallet .paycheck button').click()
+    await expect.poll(() => page.locator('#tab-wallet .paycheck ~ div .badge').first().textContent()).toBe('NEW')
+  })
+
+  it('My wallet: optional wallet connect reads the account and calls nothing else', async () => {
+    const B = deployed.accounts!.B_receiver!
+    const p2 = await browser.newPage()
+    await p2.addInitScript((acct: string) => {
+      const w = window as unknown as { __walletCalls: string[] }
+      w.__walletCalls = []
+      const provider = {
+        request: async ({ method }: { method: string }) => {
+          w.__walletCalls.push(method)
+          if (method === 'eth_requestAccounts' || method === 'eth_accounts') return [acct]
+          throw new Error('unsupported')
+        },
+        on: () => undefined,
+        removeListener: () => undefined,
+      }
+      window.addEventListener('eip6963:requestProvider', () =>
+        window.dispatchEvent(new CustomEvent('eip6963:announceProvider', { detail: { info: { uuid: 'mock-1', name: 'Mock Wallet' }, provider } })),
+      )
+    }, B)
+    await p2.goto(`http://127.0.0.1:${PORT}/`)
+    await p2.locator('#tabbtn-wallet').click()
+    await p2.locator('#tab-wallet .pill[data-chain=local]').click()
+    await p2.getByRole('button', { name: 'Connect Mock Wallet' }).click()
+    await expect.poll(() => p2.locator('#tab-wallet .account').textContent(), { timeout: 30_000 }).toContain('Connected wallet')
+    await expect.poll(() => p2.locator('#tab-wallet .histrow').count(), { timeout: 30_000 }).toBeGreaterThan(0)
+    const calls = await p2.evaluate(() => (window as unknown as { __walletCalls: string[] }).__walletCalls)
+    expect([...new Set(calls)]).toEqual(['eth_requestAccounts'])
+    await p2.close()
+  })
+
+  it('Help tab opens and shows answers', async () => {
+    await page.goto(`http://127.0.0.1:${PORT}/`)
+    await page.locator('#tabbtn-faq').click()
+    await page.locator('#tab-faq details.faq summary', { hasText: 'Is connecting my wallet safe?' }).click()
+    await expect.poll(() => page.locator('#tab-faq details[open]').textContent()).toContain('never asks for a signature')
+    await page.screenshot({ path: join(SHOTS, 'help.png'), fullPage: true })
   })
 
   it('check-before-sending flags a lookalike of a saved address (no chain call needed for the verdict)', async () => {

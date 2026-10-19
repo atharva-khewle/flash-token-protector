@@ -9,7 +9,7 @@ import type { Hex } from '../chains/types'
 import { clear, field, h, maybeLink } from './dom'
 import { addr, badge, busy, chainSelect, note, statusIcon } from './common'
 
-const VERDICT_TEXT: Record<VerifyOutput['verdict'], string> = {
+export const VERDICT_TEXT: Record<VerifyOutput['verdict'], string> = {
   VERIFIED: 'Canonical USDT arrived at your address and every required check passed.',
   FAKE: 'This does not prove a real USDT payment to you. Do not release goods or funds.',
   UNVERIFIED: 'Not proven either way. Read the warnings and skipped checks below.',

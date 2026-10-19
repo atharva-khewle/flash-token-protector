@@ -9,9 +9,9 @@ beforeAll(async () => {
 })
 
 describe('UI', () => {
-  it('renders five tabs and shows the analyze tab first', () => {
+  it('renders seven tabs and shows the analyze tab first', () => {
     const tabs = [...document.querySelectorAll('[role=tab]')].map((b) => b.textContent)
-    expect(tabs).toEqual(['Analyze tx', 'Verify tx', 'Check token', 'Scan wallet', 'Check before sending'])
+    expect(tabs).toEqual(['Analyze tx', 'My wallet', 'Verify tx', 'Check token', 'Scan wallet', 'Check before sending', 'Help'])
     expect((document.getElementById('tab-tx') as HTMLElement).hidden).toBe(false)
     expect((document.getElementById('tab-scan') as HTMLElement).hidden).toBe(true)
   })
@@ -67,5 +67,20 @@ describe('UI', () => {
     input.value = '0x55d398326f99059fF775485246999027B3197955'
     tab.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
     await expect.poll(() => tab.querySelector('.badge')?.textContent).toBe('REAL USDT')
+  })
+
+  it('wallet tab explains itself, refuses a bad address, and does not need a wallet', () => {
+    const tab = document.getElementById('tab-wallet')!
+    expect(tab.textContent).toContain('Follow a wallet')
+    const input = tab.querySelector('input[type=text]') as HTMLInputElement
+    input.value = '0x1234'
+    tab.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(tab.querySelector('.error')!.textContent).toMatch(/40 hex/)
+  })
+
+  it('help tab has the FAQ with the real USDT address', () => {
+    const tab = document.getElementById('tab-faq')!
+    expect(tab.querySelectorAll('details.faq').length).toBeGreaterThan(8)
+    expect(tab.textContent).toContain('0x55d398326f99059fF775485246999027B3197955')
   })
 })

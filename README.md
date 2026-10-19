@@ -2,15 +2,16 @@
 
 [![ci](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml/badge.svg)](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml)
 
-A read-only web app that answers five questions for people who send or receive USDT, mostly around Binance on **BNB Smart Chain (BEP20)**. Ethereum and Tron are supported too.
+A read-only web app that answers six questions for people who send or receive USDT, mostly around Binance on **BNB Smart Chain (BEP20)**. Ethereum and Tron are supported too.
 
 1. **Analyze tx**: paste only a chain and a tx hash. It lists every address and every token in the transaction, judges each token by its contract address, and tells you what looks wrong (fake "USDT", zero-value or dust poisoning, failed or unfinalized tx, lookalike addresses).
-2. **Verify tx**: the buyer says "I sent you 5,000 USDT, here is the hash". Is it real, final, sent to *my* address, and actually USDT?
-3. **Scan wallet**: does my history show fake USDT, zero-value transfers or lookalike addresses? Is someone poisoning me? Do I have risky approvals, or an EIP-7702 delegation I did not set?
-4. **Check token**: paste a token contract address. Is it the real USDT for that chain, a fake that only calls itself USDT, or a different token? The real BSC USDT is hardcoded (`0x55d398326f99059fF775485246999027B3197955`) and the check is an exact address match.
-5. **Check before sending**: is the address I'm about to withdraw to a lookalike of one I use?
+2. **My wallet**: follow an address (connect a browser wallet, or just paste one). See the real USDT balance and recent transfers, with fake-looking tokens, dust, zero-value transfers and lookalike addresses marked. Every new transfer is checked automatically while the page is open, and clicking any transfer opens the full analysis. Also: trust an address, check an address before you pay, export CSV, optional notifications. Connecting is optional and read-only (the app only asks which account is selected).
+3. **Verify tx**: the buyer says "I sent you 5,000 USDT, here is the hash". Is it real, final, sent to *my* address, and actually USDT?
+4. **Scan wallet**: does my history show fake USDT, zero-value transfers or lookalike addresses? Is someone poisoning me? Do I have risky approvals, or an EIP-7702 delegation I did not set?
+5. **Check token**: paste a token contract address. Is it the real USDT for that chain, a fake that only calls itself USDT, or a different token? The real BSC USDT is hardcoded (`0x55d398326f99059fF775485246999027B3197955`) and the check is an exact address match.
+6. **Check before sending**: is the address I'm about to withdraw to a lookalike of one I use?
 
-It never holds keys, never asks for a signature and never connects a wallet. It only reads public chain data.
+It never holds keys and never asks for a signature, a transaction or a spending approval. Connecting a wallet is optional and only reads which account is selected. It only reads public chain data. A Help tab answers common questions.
 
 > It never says "safe". **VERIFIED** means one thing: canonical USDT reached your address in a final block, and two independent RPC providers agree on it. For deposits to Binance, the final truth is always your **Binance deposit history**.
 
@@ -259,7 +260,7 @@ Unit-test receipts are **synthetic** (`tests/helpers.ts`, obviously fake address
 ## Hard rules this project follows
 
 - Defensive only. No code that creates, sends or sells fake tokens, poisons addresses or drains wallets. Attack vectors are described in words and caught in tests.
-- Read-only. No private keys, seed phrases, wallet connection or signing.
+- Read-only. No private keys or seed phrases, and no signing, sending or approvals. Connecting a browser wallet is optional and only reads the selected account (enforced by a guard and tested).
 - No invented addresses, hashes, incidents or numbers. Unconfirmed claims are marked **(verify)**.
 - No paid services, database or tracking without asking first.
 

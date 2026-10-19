@@ -46,7 +46,7 @@ export function txTab(): HTMLElement {
     if (!ph.ok) return void (err.textContent = ph.reason)
     busy(btn, true, 'Analyze')
     try {
-      out.appendChild(render(await runTxReport({ chain: c, hash: ph.hash, hiddenChars: ph.hidden })))
+      out.appendChild(renderReport(await runTxReport({ chain: c, hash: ph.hash, hiddenChars: ph.hidden })))
     } catch (e2) {
       out.appendChild(note(`Could not complete the check: ${e2 instanceof Error ? e2.message : String(e2)}. This is not a confirmation that anything is fine.`, 'warn'))
     } finally {
@@ -90,7 +90,7 @@ function tokenBlock(r: TxReportOutput, t: ReportToken): HTMLElement {
   )
 }
 
-function render(r: TxReportOutput): HTMLElement {
+export function renderReport(r: TxReportOutput): HTMLElement {
   const info = CHAINS[r.chain]
   const show = (x: `0x${string}`) => displayAddress(r.chain, x)
   const wrap = h('div', { class: 'card' })
