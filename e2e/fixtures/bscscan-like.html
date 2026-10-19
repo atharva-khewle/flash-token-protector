@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="ftp-test-chain" content="bsc" />
+    <title>Explorer-like fixture (not BscScan)</title>
+  </head>
+  <body>
+    <h1>Token transfers (fixture)</h1>
+    <table id="rows">
+      <tr id="row-real">
+        <td><a href="/address/0x1111111111111111111111111111111111111111">sender1</a></td>
+        <td><a href="/token/0x55d398326f99059ff775485246999027b3197955?a=0x2222222222222222222222222222222222222222"><span title="Tether USD (USDT)">Tether USD (USDT)</span></a></td>
+      </tr>
+      <tr id="row-fake">
+        <td><a href="/address/0x3333333333333333333333333333333333333333">sender2</a></td>
+        <td><a href="/token/0xfa4efa4efa4efa4efa4efa4efa4efa4efa4efa4e?a=0x2222222222222222222222222222222222222222"><span title="Tether USD (USDT)">Tether USD (USDT)</span></a></td>
+      </tr>
+      <tr id="row-other">
+        <td><a href="/address/0x4444444444444444444444444444444444444444">sender3</a></td>
+        <td><a href="/token/0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82?a=0x2222222222222222222222222222222222222222"><span title="PancakeSwap Token (CAKE)">PancakeSwap Token (CAKE)</span></a></td>
+      </tr>
+      <tr id="row-look">
+        <td><a id="look-link" href="/address/0xa1b2c3d4ffffffffffffffffffffffffff345678">0xa1b2c3...345678</a></td>
+        <td>poisoned history row</td>
+      </tr>
+      <tr id="row-logo">
+        <td><a href="/token/0xfa4efa4efa4efa4efa4efa4efa4efa4efa4efa4e"><img alt="" width="1" height="1" /></a></td>
+        <td>logo-only link (must not get a badge of its own)</td>
+      </tr>
+    </table>
+
+    <p>Saved deposit address: <span id="sel">0xa1b2c3d4e5f60718293a4b5c6d7e8f9012345678</span>
+      <button id="copybtn" type="button">Copy (clipboard API)</button></p>
+    <label>Withdrawal address <input id="dest" type="text" size="60" /></label>
+    <script>
+      document.getElementById('copybtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(document.getElementById('sel').textContent)
+      })
+    </script>
+  </body>
+</html>
