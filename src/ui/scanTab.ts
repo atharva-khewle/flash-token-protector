@@ -4,7 +4,7 @@ import { displayAddress } from '../lib/address'
 import { addWatch, getWatchlist, removeWatch } from '../lib/storage'
 import { runScan, type ScanOutput } from '../services/scan'
 import type { Hex } from '../chains/types'
-import { clear, field, h, link } from './dom'
+import { clear, field, h, maybeLink } from './dom'
 import { addr, badge, busy, chainSelect, diffAddress, note } from './common'
 
 export function scanTab(onWatchChange: () => void): HTMLElement {
@@ -86,7 +86,7 @@ function renderScan(r: ScanOutput): HTMLElement {
   const info = CHAINS[r.chain]
   const show = (x: Hex) => displayAddress(r.chain, x)
   const wrap = h('div', { class: 'card' })
-  wrap.appendChild(h('p', {}, 'Scanned ', addr(show(r.address)), ' on ', info.name, ' · ', link(info.explorer.address(show(r.address)), info.explorer.name)))
+  wrap.appendChild(h('p', {}, 'Scanned ', addr(show(r.address)), ' on ', info.name, ' ', maybeLink(info.explorer.address(show(r.address)), info.explorer.name)))
 
   wrap.appendChild(h('h3', {}, 'Coverage'))
   const cov = h('ul', { class: 'muted small' })
@@ -124,7 +124,7 @@ function renderScan(r: ScanOutput): HTMLElement {
   if (r.wallet.poisoning.length === 0) wrap.appendChild(h('p', { class: 'muted' }, 'None found in the scanned window.'))
   const pl = h('ul', { class: 'poison' })
   for (const p of r.wallet.poisoning) {
-    const li = h('li', {}, h('div', {}, badge(p.kind, 'bad'), ' ', p.detail), h('div', { class: 'small' }, link(info.explorer.tx(p.txHash), 'tx')))
+    const li = h('li', {}, h('div', {}, badge(p.kind, 'bad'), ' ', p.detail), h('div', { class: 'small' }, maybeLink(info.explorer.tx(p.txHash), 'tx'), h('code', { class: 'addr' }, p.txHash)))
     if (p.match) {
       li.appendChild(h('div', { class: 'cmp' }, h('span', { class: 'muted' }, 'fake: '), diffAddress(p.match.candidate, p.match.target)))
       li.appendChild(h('div', { class: 'cmp' }, h('span', { class: 'muted' }, 'yours: '), addr(p.match.target)))

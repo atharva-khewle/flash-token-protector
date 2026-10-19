@@ -11,14 +11,27 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "dev:test": "vite --mode testnet",
+    "build:test": "vite build --mode testnet --outDir dist-test",
+    "e2e": "vitest run --config vitest.e2e.config.ts e2e/vectors.test.ts",
+    "anvil": "anvil --hardfork prague --port 8545",
+    "deploy:local": "node scripts/deploy-test-contracts.ts",
+    "ext:build": "node scripts/build-extension.ts",
+    "ext:build:test": "node scripts/build-extension.ts --test",
+    "e2e:ext": "vitest run --config vitest.e2e.config.ts e2e/extension.test.ts",
+    "e2e:web": "vitest run --config vitest.e2e.config.ts e2e/website.test.ts",
+    "e2e:all": "vitest run --config vitest.e2e.config.ts",
+    "proof": "node scripts/make-proof.ts"
   },
   "dependencies": {
     "viem": "2.57.7"
   },
   "devDependencies": {
+    "@types/chrome": "0.3.5",
     "@types/node": "24.19.2",
     "happy-dom": "21.0.3",
+    "playwright-core": "1.64.1",
     "typescript": "5.9.3",
     "vite": "8.3.4",
     "vitest": "5.0.5"

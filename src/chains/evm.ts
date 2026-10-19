@@ -105,7 +105,7 @@ export class EvmAdapter implements ChainAdapter {
   async getLogs(f: LogFilter): Promise<LogEntry[]> {
     const params = [
       {
-        address: f.address,
+        ...(f.address ? { address: f.address } : {}),
         topics: f.topics,
         fromBlock: `0x${f.fromBlock.toString(16)}`,
         toBlock: `0x${f.toBlock.toString(16)}`,
@@ -189,7 +189,71 @@ export class EvmAdapter implements ChainAdapter {
     }
   }
 
+  /** Local dev node only: any-token transfer logs straight from the node, no indexer needed. */
+  private async listFromNode(address: Hex): Promise<Maybe<TokenTransfer[]>> {
+    try {
+      const head = (await this.getFinality()).head
+      const topic = `0x${address.slice(2).padStart(64, '0')}` as Hex
+      const T = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef' as Hex
+      const [inc, out] = await Promise.all([
+        this.getLogs({ topics: [T, null, topic], fromBlock: 0n, toBlock: head }),
+        this.getLogs({ topics: [T, topic], fromBlock: 0n, toBlock: head }),
+      ])
+      const seen = new Set<string>()
+      const items: TokenTransfer[] = []
+      for (const l of [...inc, ...out]) {
+        const k = `${l.txHash}|${l.logIndex}`
+        if (seen.has(k) || l.topics.length !== 3 || l.data.length !== 66) continue
+        seen.add(k)
+        items.push({
+          txHash: l.txHash,
+          blockNumber: l.blockNumber,
+          timestamp: null,
+          token: l.address,
+          tokenName: null,
+          tokenSymbol: null,
+          decimals: null,
+          from: `0x${l.topics[1]!.slice(-40)}` as Hex,
+          to: `0x${l.topics[2]!.slice(-40)}` as Hex,
+          value: BigInt(l.data),
+          txFrom: null,
+        })
+      }
+      // Names and symbols come from the contracts themselves; they are untrusted text.
+      const tokens = [...new Set(items.map((i) => i.token))]
+      const meta = new Map<Hex, { name: string | null; symbol: string | null }>()
+      await Promise.all(
+        tokens.map(async (t) => {
+          const [n, s] = await Promise.all([this.callString(t, '0x06fdde03'), this.callString(t, '0x95d89b41')])
+          meta.set(t, { name: n, symbol: s })
+        }),
+      )
+      for (const i of items) {
+        const m = meta.get(i.token)
+        i.tokenName = m?.name ?? null
+        i.tokenSymbol = m?.symbol ?? null
+      }
+      return { available: true, value: items }
+    } catch (e) {
+      return { available: false, reason: `Node log query failed (${errMsg(e)}).` }
+    }
+  }
+
+  private async callString(token: Hex, selector: Hex): Promise<string | null> {
+    const r = await this.call(token, selector)
+    if (!r.ok || r.data.length < 130) return null
+    try {
+      const h = r.data.slice(2)
+      const len = parseInt(h.slice(64, 128), 16)
+      const bytes = h.slice(128, 128 + len * 2).match(/../g) ?? []
+      return new TextDecoder().decode(Uint8Array.from(bytes.map((b) => parseInt(b, 16)))).slice(0, 120)
+    } catch {
+      return null
+    }
+  }
+
   async listTokenTransfers(address: Hex): Promise<Maybe<TokenTransfer[]>> {
+    if (this.info.unrestrictedLogs) return this.listFromNode(address)
     if (!this.explorerProxy) return { available: false, reason: 'No explorer proxy configured.' }
     try {
       const url = `${this.explorerProxy}?chain=${this.chain}&address=${address}`

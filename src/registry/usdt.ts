@@ -19,7 +19,7 @@ export interface CanonicalToken {
   note?: string
 }
 
-export const USDT: Record<ChainKey, CanonicalToken> = {
+const MAINNET: Record<'bsc' | 'eth' | 'tron', CanonicalToken> = {
   bsc: {
     chain: 'bsc',
     symbol: 'USDT',
@@ -58,6 +58,13 @@ export const USDT: Record<ChainKey, CanonicalToken> = {
     ],
     note: 'The build prompt seeded "TR7NHqjeKQxGTCi8q8ZY4pxL8otSzgjLj6t" (35 chars, extra "x"). That fails the base58 checksum. The value here is what TronGrid returns for Tether USD and passes the checksum (see tests/registry.test.ts).',
   },
+}
+
+export const USDT = { ...MAINNET } as Record<ChainKey, CanonicalToken>
+
+/** Testnet builds register a mock "canonical" token for the local chain. */
+export function registerUsdt(token: CanonicalToken): void {
+  USDT[token.chain] = token
 }
 
 export function canonicalUsdt(chain: ChainKey): CanonicalToken {

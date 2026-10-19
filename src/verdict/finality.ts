@@ -10,6 +10,7 @@ export const MIN_CONFIRMATIONS: Record<ChainKey, number> = {
   bsc: 30,
   eth: 96,
   tron: 20,
+  local: 2,
 }
 
 export function finalityCheck(chain: ChainKey, blockNumber: bigint, f: Finality | null): Check {

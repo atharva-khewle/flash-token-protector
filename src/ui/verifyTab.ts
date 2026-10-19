@@ -6,7 +6,7 @@ import { getWatchlist, markAccepted } from '../lib/storage'
 import { runVerify, type VerifyOutput } from '../services/verify'
 import { LAYER_NAMES } from '../verdict/types'
 import type { Hex } from '../chains/types'
-import { clear, field, h, link } from './dom'
+import { clear, field, h, maybeLink } from './dom'
 import { addr, badge, busy, chainSelect, note, statusIcon } from './common'
 
 const VERDICT_TEXT: Record<VerifyOutput['verdict'], string> = {
@@ -101,7 +101,8 @@ function renderResult(r: VerifyOutput): HTMLElement {
       h('p', { class: 'amount' }, 'Net canonical USDT to ', addr(show(r.target)), ': ', h('strong', {}, `${r.netFormatted} USDT`)),
     )
   }
-  wrap.appendChild(h('p', { class: 'muted' }, 'Open on ', link(info.explorer.tx(r.hash), info.explorer.name), ' (link built by this app; check the domain).'))
+  const txLink = maybeLink(info.explorer.tx(r.hash), info.explorer.name)
+  if (txLink) wrap.appendChild(h('p', { class: 'muted' }, 'Open on ', txLink, ' (link built by this app; check the domain).'))
   wrap.appendChild(note('Depositing to Binance? The final truth is your Binance deposit history, not this page and not a screenshot.', 'info'))
 
   const list = h('ol', { class: 'checks' })

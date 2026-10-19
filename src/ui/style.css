@@ -374,3 +374,12 @@ a {
     grid-column: 1 / -1;
   }
 }
+
+.testbanner {
+  background: var(--bad);
+  color: #fff;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}

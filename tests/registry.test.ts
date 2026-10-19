@@ -42,8 +42,8 @@ describe('L2 registry', () => {
 
   it('explorer links are built from the registry, https only', () => {
     for (const k of CHAIN_KEYS) {
-      expect(new URL(CHAINS[k].explorer.tx('ab')).protocol).toBe('https:')
-      expect(new URL(CHAINS[k].explorer.address('ab')).protocol).toBe('https:')
+      expect(new URL(CHAINS[k].explorer.tx('ab')!).protocol).toBe('https:')
+      expect(new URL(CHAINS[k].explorer.address('ab')!).protocol).toBe('https:')
     }
   })
 })

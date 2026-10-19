@@ -39,6 +39,11 @@ export function link(url: string, text: string): HTMLAnchorElement {
   return a
 }
 
+/** Like link(), for explorers that may not exist (local test chain). */
+export function maybeLink(url: string | null, text: string): Node | null {
+  return url ? link(url, text) : null
+}
+
 export function clear(el: Element): void {
   while (el.firstChild) el.removeChild(el.firstChild)
 }

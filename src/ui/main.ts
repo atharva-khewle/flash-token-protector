@@ -1,8 +1,12 @@
-import { h } from './dom'
+import { hydrateFromExtension } from '../lib/storage'
+import { familyOfAddress } from '../lib/input'
+import { h, link } from './dom'
 import { scanTab } from './scanTab'
 import { sendTab } from './sendTab'
 import { verifyTab } from './verifyTab'
 import './style.css'
+
+const REPO = 'https://github.com/atharva-khewle/flash-token-protector'
 
 const TABS = [
   { id: 'verify', label: 'Verify tx', make: () => verifyTab() },
@@ -10,7 +14,7 @@ const TABS = [
   { id: 'send', label: 'Check before sending', make: () => sendTab() },
 ] as const
 
-function mount(root: HTMLElement): void {
+function mount(root: HTMLElement, banner: HTMLElement | null): void {
   const panels = TABS.map((t) => {
     const p = t.make()
     p.hidden = true
@@ -32,6 +36,7 @@ function mount(root: HTMLElement): void {
   }
 
   root.append(
+    ...(banner ? [banner] : []),
     h(
       'header',
       { class: 'top' },
@@ -46,6 +51,7 @@ function mount(root: HTMLElement): void {
       { class: 'foot' },
       h('p', {}, 'This tool never says "safe". VERIFIED means: canonical USDT reached your address in a final block, as reported by two independent RPC providers.'),
       h('p', {}, 'It cannot see fiat chargebacks, a compromised device, or anything off-chain. Never share a seed phrase. Nobody legitimate needs it.'),
+      h('p', {}, link(REPO, 'Source code and test evidence'), ' · ', link(`${REPO}/releases/latest`, 'Chrome extension'), ' · ', link(`${REPO}/blob/main/docs/PROOF.md`, 'Proof of work')),
     ),
   )
   let start = 0
@@ -57,4 +63,29 @@ function mount(root: HTMLElement): void {
   select(Math.min(Math.max(start, 0), TABS.length - 1))
 }
 
-mount(document.getElementById('app')!)
+/** Right-click "Check with Flash Token Protector" opens popup.html?q=<selection>. */
+function applyQuery(): void {
+  const q = new URLSearchParams(location.search).get('q')?.trim().slice(0, 200)
+  if (!q) return
+  const isHash = /^(0x)?[0-9a-fA-F]{64}$/.test(q)
+  const isAddr = familyOfAddress(q) !== null
+  const go = (tab: string, fill: (inputs: NodeListOf<HTMLInputElement>) => void) => {
+    document.getElementById(`tabbtn-${tab}`)?.click()
+    fill(document.querySelectorAll<HTMLInputElement>(`#tab-${tab} form input`))
+  }
+  if (isHash) go('verify', (i) => void (i[0]!.value = q))
+  else if (isAddr) go('send', (i) => void (i[0]!.value = q))
+}
+
+async function start(): Promise<void> {
+  await hydrateFromExtension()
+  let banner: HTMLElement | null = null
+  if (__TESTNET__) {
+    const t = await import('../testnet')
+    banner = (await t.setupTestnet()) ? t.testBanner() : null
+  }
+  mount(document.getElementById('app')!, banner)
+  applyQuery()
+}
+
+void start()

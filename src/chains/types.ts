@@ -42,7 +42,8 @@ export interface LogEntry extends NormLog {
 }
 
 export interface LogFilter {
-  address: Hex
+  /** Omit only on a local dev node (ChainInfo.unrestrictedLogs). */
+  address?: Hex
   topics: (Hex | null)[]
   fromBlock: bigint
   toBlock: bigint

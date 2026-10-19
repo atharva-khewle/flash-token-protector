@@ -35,9 +35,6 @@ export interface ScanOutput {
   tokenRisks: { token: Hex; name: string | null; symbol: string | null; findings: RiskFinding[] }[]
 }
 
-/** Max blocks to walk back with keyless log queries. Stops earlier when a provider refuses (history limit). */
-const MAX_LOG_BLOCKS: Record<ChainKey, bigint> = { bsc: 40_000n, eth: 20_000n, tron: 0n }
-
 async function allowance(chain: ChainKey, owner: Hex, spender: Hex): Promise<bigint | null> {
   const usdt = canonicalUsdt(chain)
   const r = await adapterFor(chain).call(usdt.hex, encodeFunctionData({ abi: erc20Abi, functionName: 'allowance', args: [owner, spender] }))
@@ -78,8 +75,9 @@ async function scanEvm(chain: ChainKey, me: Hex) {
   const logs: LogEntry[] = []
   let from = head
   let reached = head + 1n
-  while (head - from < MAX_LOG_BLOCKS[chain]) {
-    const lo = from - chunk + 1n
+  const maxBlocks = BigInt(CHAINS[chain].logWindow)
+  while (head - from < maxBlocks && from > 0n) {
+    const lo = from >= chunk ? from - chunk + 1n : 0n
     try {
       const parts = await Promise.all([
         a.getLogs({ address: usdt.hex, topics: [TRANSFER_TOPIC, null, meTopic], fromBlock: lo, toBlock: from }),
@@ -111,9 +109,6 @@ async function scanEvm(chain: ChainKey, me: Hex) {
   }
 
   // Who signed outgoing zero-value transfers? If not me, it is poisoning.
-  const zeroOut = transfers.filter((t) => t.from === me && t.value === 0n).slice(0, 10)
-  await Promise.all(zeroOut.map(async (t) => (t.txFrom = await a.getTxSender(t.txHash))))
-
   const ex = await a.listTokenTransfers(me)
   if (ex.available) {
     const seen = new Set(transfers.map((t) => `${t.txHash}|${t.token}|${t.from}|${t.to}|${t.value}`))
@@ -122,6 +117,9 @@ async function scanEvm(chain: ChainKey, me: Hex) {
   } else {
     coverage.push(`Fake-token transfers to you: not checked. ${ex.reason}`)
   }
+
+  const zeroOut = transfers.filter((t) => t.from === me && t.value === 0n).slice(0, 20)
+  await Promise.all(zeroOut.map(async (t) => (t.txFrom = await a.getTxSender(t.txHash))))
 
   const allowances = await Promise.all(
     [...spenders].slice(0, 20).map(async (s) => ({ token: usdt.hex, spender: s, amount: (await allowance(chain, me, s)) ?? 0n })),
@@ -164,13 +162,13 @@ async function scanTron(me: Hex) {
   return { coverage, code: null, tronPermissions, approvals, transfers, adapter: a }
 }
 
-export async function runScan(chain: ChainKey, me: Hex, watchlist: Hex[]): Promise<ScanOutput> {
+export async function runScan(chain: ChainKey, me: Hex, watchlist: Hex[], opts: { maxTokenProbes?: number } = {}): Promise<ScanOutput> {
   const r = CHAINS[chain].family === 'tron' ? await scanTron(me) : await scanEvm(chain, me)
   const wallet = analyzeWallet(chain, me, r.transfers, watchlist)
 
   // L6: explain the top fake tokens.
   const tokenRisks = await Promise.all(
-    wallet.fakeTokens.slice(0, 4).map(async (g) => {
+    wallet.fakeTokens.slice(0, opts.maxTokenProbes ?? 4).map(async (g) => {
       const logged = r.transfers.filter((t) => t.token === g.token && t.to === me).reduce((s, t) => s + t.value, 0n)
       const p = await probeToken(r.adapter, g.token, me, logged > 0n ? logged : null)
       return { token: g.token, name: p.name ?? g.name, symbol: p.symbol ?? g.symbol, findings: tokenRisk({ ...p, name: p.name ?? g.name, symbol: p.symbol ?? g.symbol }).findings }
