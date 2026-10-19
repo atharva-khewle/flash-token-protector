@@ -1,0 +1,537 @@
+/* Soft wallet look: rounded, tinted, calm. Loaded after style.css and overrides its tokens. */
+
+:root {
+  --bg: #1b1b1d;
+  --panel: #242427;
+  --panel-2: #2d2d32;
+  --line: #36363c;
+  --text: #f3f3f5;
+  --muted: #8f8f9a;
+  --ok: #85e0b0;
+  --warn: #f0c674;
+  --bad: #ff8a80;
+  --accent: #ab9ff2;
+  --accent-hover: #bdb3f5;
+  --accent-ink: #24193f;
+  --link: #c4bbf8;
+  --radius: 18px;
+}
+
+body {
+  background: radial-gradient(1200px 500px at 50% -200px, rgba(171, 159, 242, 0.1), transparent 70%), var(--bg);
+  background-attachment: fixed;
+}
+
+.card {
+  border-color: transparent;
+  background: var(--panel);
+}
+
+input,
+select {
+  background: var(--panel-2);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 11px 14px;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+button {
+  background: var(--panel-2);
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 16px;
+}
+
+button:hover:not(:disabled) {
+  background: #38383f;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  padding: 11px 26px;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+button.link {
+  background: none;
+}
+
+.tabs {
+  gap: 6px;
+  padding: 5px;
+  background: var(--panel);
+  border: 0;
+  border-radius: 999px;
+  margin: 14px 0 6px;
+}
+
+.tabbtn {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 15px;
+  background: none;
+}
+
+.tabbtn:hover:not(:disabled) {
+  background: none;
+  color: var(--text);
+}
+
+.tabbtn[aria-selected='true'] {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.badge {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(143, 143, 154, 0.16);
+  padding: 3px 11px;
+}
+
+.badge-ok {
+  background: rgba(133, 224, 176, 0.14);
+}
+
+.badge-warn {
+  background: rgba(240, 198, 116, 0.14);
+}
+
+.badge-bad {
+  background: rgba(255, 138, 128, 0.15);
+}
+
+.note {
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: rgba(143, 143, 154, 0.1);
+}
+
+.note-warn {
+  background: rgba(240, 198, 116, 0.1);
+}
+
+.note-danger {
+  background: rgba(255, 138, 128, 0.1);
+}
+
+.alert {
+  border-radius: 16px;
+  border: 0;
+  background: var(--panel);
+}
+
+/* Pills: network and filters */
+
+.pills,
+.filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pill,
+.filter {
+  background: var(--panel-2);
+  color: var(--muted);
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.pill[aria-pressed='true'],
+.filter[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.filters {
+  margin: 14px 0 10px;
+}
+
+/* Onboarding */
+
+.hero {
+  padding: clamp(16px, 4vw, 26px);
+}
+
+.herohead h2 {
+  margin: 0 0 4px;
+  font-size: clamp(20px, 4vw, 26px);
+}
+
+.herohead p {
+  margin: 0;
+}
+
+.walletbtn {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  padding: 11px 22px;
+}
+
+.walletbtn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.steps {
+  color: var(--muted);
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 14px 4px;
+}
+
+.steps strong {
+  color: var(--text);
+}
+
+/* Account card */
+
+.account {
+  padding: clamp(16px, 4vw, 24px);
+  text-align: center;
+}
+
+.acchead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  flex-wrap: wrap;
+}
+
+.accwho {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.balance {
+  margin: 18px 0 2px;
+  font-size: clamp(34px, 9vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.balunit {
+  font-size: 0.4em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.livestatus {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: 0 0 auto;
+}
+
+.dot.on {
+  background: var(--ok);
+  box-shadow: 0 0 0 4px rgba(133, 224, 176, 0.16);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.action {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  width: auto;
+  border-radius: 16px;
+  padding: 12px 6px;
+  background: var(--panel-2);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.aico {
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  border-radius: 50%;
+  background: rgba(171, 159, 242, 0.16);
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.notifyrow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  text-align: left;
+}
+
+.notifyrow input {
+  width: auto;
+}
+
+.account .pills {
+  justify-content: flex-end;
+}
+
+/* Attention banner */
+
+.attention {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: 16px;
+  padding: 12px 16px;
+  background: rgba(255, 138, 128, 0.12);
+  color: var(--text);
+  margin-top: 12px;
+}
+
+.attention strong {
+  color: var(--bad);
+  display: block;
+}
+
+/* History rows */
+
+.hist {
+  gap: 4px;
+}
+
+.histrow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-areas: none;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--panel);
+  width: 100%;
+  text-align: left;
+}
+
+.histrow:hover:not(:disabled) {
+  background: var(--panel-2);
+}
+
+.histrow.fresh {
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.histrow .ico {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 18px;
+  background: rgba(143, 143, 154, 0.16);
+}
+
+.histrow.in .ico {
+  background: rgba(133, 224, 176, 0.14);
+  color: var(--ok);
+}
+
+.histrow.out .ico {
+  background: rgba(171, 159, 242, 0.16);
+  color: var(--accent);
+}
+
+.histrow.bad .ico {
+  background: rgba(255, 138, 128, 0.16);
+  color: var(--bad);
+}
+
+.histrow .main {
+  display: grid;
+  min-width: 0;
+}
+
+.histrow .title {
+  font-weight: 600;
+}
+
+.histrow .sub {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.histrow .side {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+  min-width: 0;
+}
+
+.histrow .amt {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.histrow .amt.in {
+  color: var(--ok);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.chips .badge {
+  margin-left: 0;
+  font-size: 11px;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(143, 143, 154, 0.16);
+  color: var(--muted);
+}
+
+.chip-bad {
+  background: rgba(255, 138, 128, 0.15);
+  color: var(--bad);
+}
+
+.chip-warn {
+  background: rgba(240, 198, 116, 0.14);
+  color: var(--warn);
+}
+
+.chip-ok {
+  background: rgba(133, 224, 176, 0.14);
+  color: var(--ok);
+}
+
+.empty {
+  text-align: center;
+}
+
+.detailcard {
+  border: 1px solid var(--accent);
+}
+
+.trustbox {
+  background: var(--panel-2);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 12px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.paycheck {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+/* FAQ */
+
+.faqgroup {
+  margin: 22px 4px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+details.faq {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 0 16px;
+  margin: 6px 0;
+}
+
+details.faq summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+details.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+details.faq summary::after {
+  content: '+';
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1;
+}
+
+details.faq[open] summary::after {
+  content: '−';
+}
+
+details.faq p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .histrow {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px;
+  }
+  .histrow .ico {
+    width: 40px;
+    height: 40px;
+  }
+  .paycheck {
+    grid-template-columns: 1fr;
+  }
+  .account .pills {
+    justify-content: flex-start;
+  }
+}

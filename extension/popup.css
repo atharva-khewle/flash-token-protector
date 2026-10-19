@@ -1,14 +1,13 @@
+/* The popup is narrow; the same page opened in a tab uses the full width (see style.css). */
 body.ext main {
-  width: 460px;
-  max-width: 100%;
+  width: min(100vw, 500px);
   padding: 10px 12px 16px;
 }
 
 @media (min-width: 700px) {
   body.ext main {
-    width: auto;
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 16px;
+    width: 100%;
+    max-width: 1080px;
+    padding: 24px;
   }
 }

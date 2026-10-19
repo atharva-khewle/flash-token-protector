@@ -1,13 +1,18 @@
+/* Matte gray theme, shared by the website and the extension. Fluid from phone to desktop. */
 :root {
-  --bg: #0d1117;
-  --panel: #151b23;
-  --line: #2a313c;
-  --text: #e6edf3;
-  --muted: #8b949e;
-  --ok: #3fb950;
-  --warn: #d29922;
-  --bad: #f85149;
-  --accent: #26a17b;
+  --bg: #1a1b1d;
+  --panel: #232528;
+  --panel-2: #2b2e32;
+  --line: #383b40;
+  --text: #e3e5e8;
+  --muted: #98a0a8;
+  --ok: #86c19f;
+  --warn: #d6b26b;
+  --bad: #e5786f;
+  --accent: #6d8fa8;
+  --accent-hover: #7ba0ba;
+  --link: #a7c1d6;
+  --radius: 10px;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: dark;
 }
@@ -16,22 +21,29 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  overflow-wrap: break-word;
 }
 
 main {
-  max-width: 880px;
+  width: 100%;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 16px;
+  padding: clamp(10px, 3vw, 24px);
 }
 
 h1 {
-  font-size: 22px;
-  margin: 8px 0 4px;
+  font-size: clamp(19px, 3.4vw, 26px);
+  margin: 6px 0 4px;
+  letter-spacing: -0.01em;
 }
 
 h3 {
@@ -39,10 +51,36 @@ h3 {
   margin: 18px 0 6px;
 }
 
+h3.flush {
+  margin: 0;
+}
+
+.top {
+  display: grid;
+  gap: 2px;
+}
+
+.top .toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lead {
+  color: var(--muted);
+  margin: 4px 0 8px;
+}
+
 .tagline,
 .muted,
 .hint {
   color: var(--muted);
+}
+
+.tagline {
+  margin: 2px 0;
 }
 
 .small {
@@ -54,25 +92,34 @@ h3 {
   color: var(--muted);
   border-left: 3px solid var(--accent);
   padding-left: 8px;
+  margin: 6px 0 0;
 }
 
 .tabs {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   border-bottom: 1px solid var(--line);
-  margin: 16px 0;
+  margin: 14px 0;
   overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tabbtn {
   background: none;
   border: 0;
   border-bottom: 2px solid transparent;
+  border-radius: 0;
   color: var(--muted);
-  padding: 8px 12px;
+  padding: 9px 13px;
   font: inherit;
   cursor: pointer;
   white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.tabbtn:hover {
+  color: var(--text);
 }
 
 .tabbtn[aria-selected='true'] {
@@ -83,8 +130,8 @@ h3 {
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius);
+  padding: clamp(12px, 2.4vw, 18px);
   margin: 12px 0;
 }
 
@@ -110,7 +157,7 @@ h3 {
 
 .row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   gap: 12px;
   align-items: end;
 }
@@ -122,10 +169,18 @@ button {
   color: var(--text);
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: 7px;
+  padding: 9px 11px;
   min-width: 0;
   width: 100%;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 input[type='text'] {
@@ -136,15 +191,25 @@ input[type='text'] {
 button {
   cursor: pointer;
   width: auto;
+  background: var(--panel-2);
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--muted);
 }
 
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
-  font-weight: 600;
+  color: #121416;
+  font-weight: 700;
   justify-self: start;
-  padding: 8px 20px;
+  padding: 9px 22px;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 button:disabled {
@@ -163,7 +228,6 @@ button.link {
 .error {
   color: var(--bad);
   margin: 0;
-  min-height: 0;
 }
 
 .error:empty {
@@ -179,24 +243,26 @@ button.link {
 
 .verdict p {
   margin: 0;
-  flex: 1 1 260px;
+  flex: 1 1 240px;
 }
 
 .badge {
   display: inline-block;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.04em;
-  padding: 3px 10px;
-  border-radius: 4px;
+  padding: 2px 9px;
+  border-radius: 5px;
   border: 1px solid currentColor;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
 .verdict .badge {
-  font-size: 18px;
-  padding: 6px 14px;
+  font-size: clamp(14px, 3.4vw, 18px);
+  padding: 5px 13px;
   margin-left: 0;
+  white-space: normal;
 }
 
 .badge-ok {
@@ -289,7 +355,8 @@ button.link {
   border-left: 3px solid var(--muted);
   padding: 6px 10px;
   margin: 10px 0;
-  background: rgba(139, 148, 158, 0.08);
+  background: rgba(152, 160, 168, 0.08);
+  border-radius: 0 6px 6px 0;
 }
 
 .note-warn {
@@ -298,7 +365,7 @@ button.link {
 
 .note-danger {
   border-color: var(--bad);
-  background: rgba(248, 81, 73, 0.08);
+  background: rgba(229, 120, 111, 0.09);
 }
 
 .tbl {
@@ -312,6 +379,7 @@ button.link {
   text-align: left;
   padding: 6px;
   border-top: 1px solid var(--line);
+  vertical-align: top;
 }
 
 .pos {
@@ -335,6 +403,7 @@ button.link {
 
 .risks {
   font-size: 13px;
+  padding-left: 18px;
 }
 
 .risk-high {
@@ -368,7 +437,128 @@ button.link {
 }
 
 a {
-  color: #58a6ff;
+  color: var(--link);
+}
+
+/* ---- My wallet ---- */
+
+.walletbtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.walletbtns .note,
+.walletbtns p {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+.or {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.accountcard {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.livestatus {
+  margin: 6px 2px;
+}
+
+.alerts {
+  display: grid;
+  gap: 8px;
+}
+
+.alert {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--warn);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.alert.ok {
+  border-left-color: var(--ok);
+}
+
+.alert.bad {
+  border-left-color: var(--bad);
+}
+
+.detailhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.hist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.histrow {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1.3fr) auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--panel);
+  border-radius: 8px;
+}
+
+.histrow.fresh {
+  border-color: var(--accent);
+}
+
+.histrow .dir {
+  font-weight: 700;
+}
+
+.histrow.in .dir {
+  color: var(--ok);
+}
+
+.histrow.out .dir {
+  color: var(--warn);
+}
+
+.histrow .amt {
+  overflow-wrap: anywhere;
+}
+
+.histrow .tok {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.histrow .badge {
+  margin-left: 0;
+}
+
+.histrow .when {
+  font-size: 12px;
+  text-align: right;
+}
+
+.coverage {
+  padding-left: 18px;
 }
 
 .foot {
@@ -379,20 +569,65 @@ a {
   padding-top: 12px;
 }
 
-@media (max-width: 560px) {
+.testbanner {
+  background: var(--bad);
+  color: #121416;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+/* ---- Small screens ---- */
+
+@media (max-width: 640px) {
   .check {
     grid-template-columns: 48px 1fr;
   }
   .check .why {
     grid-column: 1 / -1;
   }
+  .tbl {
+    display: block;
+    overflow-x: auto;
+  }
+  .histrow {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'dir amt tok'
+      'cp cp when';
+    row-gap: 4px;
+  }
+  .histrow .dir {
+    grid-area: dir;
+  }
+  .histrow .amt {
+    grid-area: amt;
+  }
+  .histrow .tok {
+    grid-area: tok;
+    justify-content: flex-end;
+  }
+  .histrow .cp {
+    grid-area: cp;
+  }
+  .histrow .when {
+    grid-area: when;
+  }
+  button.primary {
+    justify-self: stretch;
+  }
 }
 
-.testbanner {
-  background: var(--bad);
-  color: #fff;
-  font-weight: 700;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 8px;
+@media (min-width: 1100px) {
+  main {
+    max-width: 1080px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tabbtn,
+  button {
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
 }
