@@ -34,7 +34,11 @@ const shots = join(ROOT, 'docs', 'proof', 'extension')
 
 async function shot(page: Page, name: string): Promise<void> {
   mkdirSync(shots, { recursive: true })
-  await page.screenshot({ path: join(shots, `${name}.png`) })
+  try {
+    await page.screenshot({ path: join(shots, `${name}.png`) })
+  } catch {
+    // Screenshots are evidence, not assertions: some virtual displays (xvfb) cannot capture.
+  }
 }
 
 beforeAll(async () => {
@@ -54,7 +58,7 @@ beforeAll(async () => {
     // Playwright passes --disable-extensions by default, which would stop the extension loading.
     ignoreDefaultArgs: ['--disable-extensions'],
     viewport: { width: 1100, height: 800 },
-    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, '--disable-features=DisableLoadExtensionCommandLineSwitch', ...(process.env.HEADED ? [] : ['--headless=new'])],
+    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, '--disable-features=DisableLoadExtensionCommandLineSwitch', ...(process.env.HEADED ? ['--disable-gpu'] : ['--headless=new'])],
   })
   let sw = ctx.serviceWorkers()[0]
   if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 20_000 })
