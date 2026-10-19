@@ -45,6 +45,34 @@ function save(s: State): void {
   } catch {
     /* storage unavailable: in-memory only for this tab */
   }
+  // Browser extension: mirror so content scripts (other origins) can read the watchlist.
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) void chrome.storage.local.set({ [KEY]: s })
+  } catch {
+    /* not an extension page */
+  }
+}
+
+/** Extension popup: pull the saved state from chrome.storage (the source content scripts also use). */
+export async function hydrateFromExtension(): Promise<void> {
+  try {
+    if (typeof chrome === 'undefined' || !chrome.storage?.local) return
+    const got = (await chrome.storage.local.get(KEY)) as Record<string, Partial<State> | undefined>
+    const s = got[KEY]
+    if (!s) {
+      // First run after install: push whatever this page already has.
+      if (load().watchlist.length > 0) save(load())
+      return
+    }
+    memory = {
+      watchlist: Array.isArray(s.watchlist) ? s.watchlist.filter((w) => w && typeof w.address === 'string') : [],
+      accepted: Array.isArray(s.accepted) ? s.accepted.filter((a) => typeof a === 'string') : [],
+      recent: s.recent && typeof s.recent === 'object' ? s.recent : {},
+    }
+    window.localStorage.setItem(KEY, JSON.stringify(memory))
+  } catch {
+    /* optional */
+  }
 }
 
 export function getWatchlist(chain?: ChainKey): WatchEntry[] {
