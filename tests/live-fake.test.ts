@@ -22,7 +22,7 @@ describe.skipIf(!live)('live BSC: fake USDT in the wild', () => {
     it(f.label, { timeout: 90_000 }, async () => {
       const rc = await client.getTransactionReceipt({ hash: f.hash })
       const log = rc.logs.find((l) => l.topics[0] === TRANSFER && l.topics.length === 3 && l.address.toLowerCase() !== CANON)!
-      const to = `0x${log.topics[2]!.slice(26)}`
+      const to = `0x${log.topics[2]!.slice(26)}` as Hex
       const amount = BigInt(log.data)
       const r = await runVerify({ chain: 'bsc', hash: f.hash, hiddenChars: 0, context: { recipient: to, amount }, watchlist: [] })
       console.log(`${f.label}\n  token ${log.address} to ${to} raw ${amount}\n  VERDICT ${r.verdict}\n` + r.checks.map((c) => `  ${c.id} ${c.status}`).join('\n'))
