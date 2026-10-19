@@ -20,7 +20,7 @@ It never holds keys and never asks for a signature, a transaction or a spending 
 | | |
 |---|---|
 | **Website** | <https://flash-token-protector.pages.dev> (hosted on Cloudflare Pages) |
-| **Chrome extension** | [Download the zip](https://github.com/atharva-khewle/flash-token-protector/releases/latest/download/flash-token-protector-extension.zip) → unzip → `chrome://extensions` → turn on **Developer mode** → **Load unpacked** → pick the unzipped folder. Details and permissions: [`docs/EXTENSION.md`](docs/EXTENSION.md) |
+| **Chrome extension** | [Download the zip](https://github.com/atharva-khewle/flash-token-protector/releases/latest/download/flash-token-protector-extension.zip) → **unzip it** (right-click → Extract All) → `chrome://extensions` (Brave: `brave://extensions`) → turn on **Developer mode** → **Load unpacked** → pick the unzipped folder that contains `manifest.json`. Dragging the unzipped *folder* onto the page also works. Dragging the .zip itself is not reliable across browsers. Details and permissions: [`docs/EXTENSION.md`](docs/EXTENSION.md) |
 | **Try it on real chain data** | [`docs/TEST_TXS.md`](docs/TEST_TXS.md): real BSC transactions where a fake "USDT" token was sent (expected FAKE) and real USDT transfers (expected VERIFIED), ready to paste into the site. |
 | **Proof it works** | [`docs/PROOF.md`](docs/PROOF.md): 31 attack scenarios built with real transactions on a local chain, plus real-browser tests of the site and the extension. One command reruns them. |
 

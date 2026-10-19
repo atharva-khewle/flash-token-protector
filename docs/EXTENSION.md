@@ -4,9 +4,9 @@ Same checks as the website, plus protection on the pages where people actually g
 
 ## Install (Developer mode)
 
-1. Download `flash-token-protector-extension.zip` from the [latest release](https://github.com/atharva-khewle/flash-token-protector/releases/latest) and unzip it.
+1. Download `flash-token-protector-extension.zip` from the [latest release](https://github.com/atharva-khewle/flash-token-protector/releases/latest) and **unzip it first** (right-click → Extract All). Do not load the .zip itself.
 2. Open `chrome://extensions` and turn on **Developer mode** (top right).
-3. Click **Load unpacked** and choose the unzipped folder (the one that contains `manifest.json`).
+3. Click **Load unpacked** and choose the unzipped folder (the one that contains `manifest.json`). Dragging that folder onto the page works too; dragging the .zip file is browser-dependent and may silently do nothing.
 4. Pin the shield icon. Click it, open **Scan wallet**, and add your own addresses to the watchlist (your Binance deposit addresses especially). The page guards compare against that list.
 
 To check the zip against the source: `npm ci && npm run ext:build` builds `extension/dist` from this repository.

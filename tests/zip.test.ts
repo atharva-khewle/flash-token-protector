@@ -13,7 +13,7 @@ describe('zipDir', () => {
     writeFileSync(join(dir, 'icons', 'icon-16.png'), Buffer.from([1, 2, 3]))
     const out = join(dir, '..', `ftp-${Date.now()}.zip`)
     const names = zipDir(dir, out)
-    expect(names).toEqual(['icons/icon-16.png', 'manifest.json'])
+    expect(names).toEqual(['manifest.json', 'icons/', 'icons/icon-16.png'])
     const buf = readFileSync(out)
     expect(buf.includes(Buffer.from('icons/icon-16.png'))).toBe(true)
     expect(buf.includes(Buffer.from('icons\icon-16.png'))).toBe(false)

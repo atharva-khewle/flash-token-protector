@@ -22,12 +22,14 @@ function crc32(buf: Buffer): number {
   return (c ^ 0xffffffff) >>> 0
 }
 
+/** Files and directories (directories end in '/'), manifest.json first, like a conventional zip. */
 function walk(dir: string, prefix = ''): string[] {
   const out: string[] = []
-  for (const name of readdirSync(dir).sort()) {
+  const names = readdirSync(dir).sort((a, b) => (a === 'manifest.json' ? -1 : b === 'manifest.json' ? 1 : a < b ? -1 : 1))
+  for (const name of names) {
     const full = join(dir, name)
     const rel = prefix ? `${prefix}/${name}` : name
-    if (statSync(full).isDirectory()) out.push(...walk(full, rel))
+    if (statSync(full).isDirectory()) out.push(`${rel}/`, ...walk(full, rel))
     else out.push(rel)
   }
   return out
@@ -43,18 +45,23 @@ export function zipDir(dir: string, outFile: string): string[] {
   let offset = 0
 
   for (const name of names) {
-    const data = readFileSync(join(dir, ...name.split('/')))
+    const isDir = name.endsWith('/')
+    const data = isDir ? Buffer.alloc(0) : readFileSync(join(dir, ...name.split('/')))
     const packed = deflateRawSync(data)
-    const useDeflate = packed.length < data.length
+    const useDeflate = !isDir && packed.length < data.length
     const body = useDeflate ? packed : data
     const method = useDeflate ? 8 : 0
     const nameBuf = Buffer.from(name, 'utf8')
     const crc = crc32(data)
+    // Flag bit 11 (UTF-8 names) only when needed, as Info-ZIP does.
+    const flags = /^[ -~]*$/.test(name) ? 0 : 0x0800
+    // Unix host, like Info-ZIP: 0o100644 for files, 0o040755 plus the DOS directory bit for folders.
+    const attrs = isDir ? ((0o040755 << 16) | 0x10) >>> 0 : (0o100644 << 16) >>> 0
 
     const local = Buffer.alloc(30)
     local.writeUInt32LE(0x04034b50, 0)
     local.writeUInt16LE(20, 4)
-    local.writeUInt16LE(0x0800, 6) // UTF-8 names
+    local.writeUInt16LE(flags, 6)
     local.writeUInt16LE(method, 8)
     local.writeUInt16LE(DOS_TIME, 10)
     local.writeUInt16LE(DOS_DATE, 12)
@@ -67,9 +74,9 @@ export function zipDir(dir: string, outFile: string): string[] {
 
     const cen = Buffer.alloc(46)
     cen.writeUInt32LE(0x02014b50, 0)
-    cen.writeUInt16LE(20, 4)
-    cen.writeUInt16LE(20, 6)
-    cen.writeUInt16LE(0x0800, 8)
+    cen.writeUInt16LE(0x031e, 4) // made by: Unix, spec 3.0
+    cen.writeUInt16LE(isDir ? 20 : 20, 6)
+    cen.writeUInt16LE(flags, 8)
     cen.writeUInt16LE(method, 10)
     cen.writeUInt16LE(DOS_TIME, 12)
     cen.writeUInt16LE(DOS_DATE, 14)
@@ -77,6 +84,7 @@ export function zipDir(dir: string, outFile: string): string[] {
     cen.writeUInt32LE(body.length, 20)
     cen.writeUInt32LE(data.length, 24)
     cen.writeUInt16LE(nameBuf.length, 28)
+    cen.writeUInt32LE(attrs, 38)
     cen.writeUInt32LE(offset, 42)
     central.push(cen, nameBuf)
 
