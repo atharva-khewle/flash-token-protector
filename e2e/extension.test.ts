@@ -1,5 +1,5 @@
 // Loads the real built extension into real Chrome and drives it.
-//   npm run e2e:ext        (needs Chrome; set CHROME_BIN if it is not in the default place)
+//   npm run e2e:ext        (needs Chrome; set FTP_CHROMIUM if it is not in the default place)
 //
 // The explorer fixture is served on 127.0.0.1:5199. The --test build of the extension also
 // injects there; the release build does not (see tests/extension-manifest.test.ts).
@@ -16,9 +16,9 @@ import { getAddress } from 'viem'
 const ROOT = process.cwd()
 const EXT = join(ROOT, 'extension', 'dist-test')
 const PORT = 5199
-// Branded Chrome 137+ ignores --load-extension, so tests use Playwright's Chromium
-// (`npx playwright-core install chromium`) unless CHROME_BIN points at a build that still allows it.
-const CHROME = process.env.CHROME_BIN ?? chromium.executablePath()
+// Branded Chrome 137+ ignores --load-extension (and CI images set CHROME_BIN to it), so tests use Playwright's Chromium
+// (`npx playwright-core install chromium`) unless FTP_CHROMIUM points at a build that still allows it.
+const CHROME = process.env.FTP_CHROMIUM ?? chromium.executablePath()
 
 const SAVED = '0xa1b2c3d4e5f60718293a4b5c6d7e8f9012345678'
 const LOOK = '0xa1b2c3d4ffffffffffffffffffffffffff345678'

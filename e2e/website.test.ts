@@ -16,7 +16,7 @@ import { scenarios, type Outcome } from './scenarios'
 
 const ROOT = process.cwd()
 const PORT = 5174
-const CHROME = process.env.CHROME_BIN ?? chromium.executablePath()
+const CHROME = process.env.FTP_CHROMIUM ?? chromium.executablePath()
 const SHOTS = join(ROOT, 'docs', 'proof', 'website')
 
 let anvil: Anvil
@@ -36,7 +36,7 @@ const SCAN_EXPECT: Record<string, string> = {
 const SHOT_IDS = new Set(['baseline', 'A1-fake-tether', 'B9-honeypot', 'C14-mixed', 'C20-block-hash', 'D21-zero-value', 'E25-7702'])
 
 beforeAll(async () => {
-  if (!existsSync(CHROME)) throw new Error('Chromium not found. Set CHROME_BIN or run: npx playwright-core install chromium')
+  if (!existsSync(CHROME)) throw new Error('Chromium not found. Set FTP_CHROMIUM or run: npx playwright-core install chromium')
   anvil = await startAnvil()
   const d = await deployAll(anvil.rpc)
   registerLocal(d)
