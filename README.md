@@ -16,7 +16,7 @@ It never holds keys, never asks for a signature and never connects a wallet. It 
 
 | | |
 |---|---|
-| **Website** | <https://flash-token-protector.pages.dev> *(Cloudflare Pages; link updated after deploy)* |
+| **Website** | <https://flash-token-protector.pages.dev> (hosted on Cloudflare Pages) |
 | **Chrome extension** | [Download the zip](https://github.com/atharva-khewle/flash-token-protector/releases/latest/download/flash-token-protector-extension.zip) → unzip → `chrome://extensions` → turn on **Developer mode** → **Load unpacked** → pick the unzipped folder. Details and permissions: [`docs/EXTENSION.md`](docs/EXTENSION.md) |
 | **Proof it works** | [`docs/PROOF.md`](docs/PROOF.md): 31 attack scenarios built with real transactions on a local chain, plus real-browser tests of the site and the extension. One command reruns them. |
 
