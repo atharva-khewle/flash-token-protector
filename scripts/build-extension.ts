@@ -11,6 +11,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { join } from 'node:path'
 import { build } from 'vite'
 import { CHAIN_KEYS, CHAINS } from '../src/registry/chains.ts'
+import { zipDir } from './zip.ts'
 
 const ROOT = join(import.meta.dirname, '..')
 const EXT = join(ROOT, 'extension')
@@ -86,15 +87,10 @@ cpSync(join(EXT, 'icons'), join(OUT, 'icons'), { recursive: true })
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n')
 
 if (!test) {
-  // Reproducible zip: fixed timestamps and sorted entries come from the `zip` tool being given a sorted list.
+  // Own writer instead of Compress-Archive, which stores backslash paths that Chrome/Brave cannot read.
   const zip = join(EXT, 'flash-token-protector-extension.zip')
   rmSync(zip, { force: true })
-  mkdirSync(join(ROOT, 'extension'), { recursive: true })
-  if (process.platform === 'win32') {
-    execFileSync('powershell', ['-NoProfile', '-Command', `Compress-Archive -Path '${OUT}\\*' -DestinationPath '${zip}' -Force`], { stdio: 'inherit' })
-  } else {
-    execFileSync('zip', ['-r', '-X', zip, '.'], { cwd: OUT, stdio: 'inherit' })
-  }
+  zipDir(OUT, zip)
   console.log(`zip: ${zip}`)
 }
 console.log(`extension built: ${OUT}`)
