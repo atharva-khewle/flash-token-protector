@@ -65,6 +65,12 @@ describe('D. address poisoning (wallet scan)', () => {
     expect(w.poisoning.map((p) => p.kind)).toContain('lookalike')
   })
 
+  it('dust from an address I really pay is not reported as poisoning', () => {
+    const paid = tx({ to: FRIEND, value: usdtUnits('bsc', 50) })
+    const back = tx({ txHash: `0x${'04'.repeat(32)}`, from: FRIEND, to: ME, value: 10n ** 12n, txFrom: FRIEND })
+    expect(analyzeWallet('bsc', ME, [paid, back], []).poisoning).toHaveLength(0)
+  })
+
   it('D22 plain dust from an unrelated address is still reported', () => {
     const w = analyzeWallet('bsc', ME, [tx({ from: ATTACKER, to: ME, value: 10n ** 12n, txFrom: ATTACKER })], [])
     expect(w.poisoning.map((p) => p.kind)).toContain('dust')

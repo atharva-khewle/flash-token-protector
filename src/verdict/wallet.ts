@@ -212,7 +212,8 @@ export function analyzeWallet(chain: ChainKey, victim: Hex, transfers: TokenTran
       continue
     }
 
-    if (!outgoing && canonical && t.value > 0n && t.value < one / 100n) {
+    // Dust from an address I really pay is not the poisoning pattern; dust from a stranger is.
+    if (!outgoing && canonical && t.value > 0n && t.value < one / 100n && !trusted.has(counterparty)) {
       seen.add(key)
       poisoning.push({
         txHash: t.txHash,
