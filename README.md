@@ -18,6 +18,7 @@ It never holds keys, never asks for a signature and never connects a wallet. It 
 |---|---|
 | **Website** | <https://flash-token-protector.pages.dev> (hosted on Cloudflare Pages) |
 | **Chrome extension** | [Download the zip](https://github.com/atharva-khewle/flash-token-protector/releases/latest/download/flash-token-protector-extension.zip) → unzip → `chrome://extensions` → turn on **Developer mode** → **Load unpacked** → pick the unzipped folder. Details and permissions: [`docs/EXTENSION.md`](docs/EXTENSION.md) |
+| **Try it on real chain data** | [`docs/TEST_TXS.md`](docs/TEST_TXS.md): real BSC transactions where a fake "USDT" token was sent (expected FAKE) and real USDT transfers (expected VERIFIED), ready to paste into the site. |
 | **Proof it works** | [`docs/PROOF.md`](docs/PROOF.md): 31 attack scenarios built with real transactions on a local chain, plus real-browser tests of the site and the extension. One command reruns them. |
 
 Bookmark the real site. Clones of checker sites exist, and a clone that always says VERIFIED is itself an attack (F32d).
