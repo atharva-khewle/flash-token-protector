@@ -17,6 +17,10 @@ Each token below is a contract that is not the real USDT but calls itself USDT o
 
 Open the hash on BscScan next to the tool: the transfer looks like USDT there too, which is the point. Open the contract link and compare it with the real one below.
 
+## Check token tab
+
+Paste just the contract address with chain BSC. Expected: the four fake contracts above give **FAKE USDT**, `0x55d398326f99059fF775485246999027B3197955` gives **REAL USDT**, WBNB `0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c` gives **NOT USDT** (a different, ordinary token), and a plain wallet address gives **NOT A CONTRACT**.
+
 ## Real USDT (expected result: VERIFIED)
 
 | What | Tx hash | Recipient | Amount |

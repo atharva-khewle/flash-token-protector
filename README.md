@@ -2,11 +2,12 @@
 
 [![ci](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml/badge.svg)](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml)
 
-A read-only web app that answers three questions for people who send or receive USDT, mostly around Binance on **BNB Smart Chain (BEP20)**. Ethereum and Tron are supported too.
+A read-only web app that answers four questions for people who send or receive USDT, mostly around Binance on **BNB Smart Chain (BEP20)**. Ethereum and Tron are supported too.
 
 1. **Verify tx**: the buyer says "I sent you 5,000 USDT, here is the hash". Is it real, final, sent to *my* address, and actually USDT?
 2. **Scan wallet**: does my history show fake USDT, zero-value transfers or lookalike addresses? Is someone poisoning me? Do I have risky approvals, or an EIP-7702 delegation I did not set?
-3. **Check before sending**: is the address I'm about to withdraw to a lookalike of one I use?
+3. **Check token**: paste a token contract address. Is it the real USDT for that chain, a fake that only calls itself USDT, or a different token? The real BSC USDT is hardcoded (`0x55d398326f99059fF775485246999027B3197955`) and the check is an exact address match.
+4. **Check before sending**: is the address I'm about to withdraw to a lookalike of one I use?
 
 It never holds keys, never asks for a signature and never connects a wallet. It only reads public chain data.
 

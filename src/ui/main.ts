@@ -3,6 +3,7 @@ import { familyOfAddress } from '../lib/input'
 import { h, link } from './dom'
 import { scanTab } from './scanTab'
 import { sendTab } from './sendTab'
+import { tokenTab } from './tokenTab'
 import { verifyTab } from './verifyTab'
 import './style.css'
 
@@ -10,6 +11,7 @@ const REPO = 'https://github.com/atharva-khewle/flash-token-protector'
 
 const TABS = [
   { id: 'verify', label: 'Verify tx', make: () => verifyTab() },
+  { id: 'token', label: 'Check token', make: () => tokenTab() },
   { id: 'scan', label: 'Scan wallet', make: () => scanTab(() => undefined) },
   { id: 'send', label: 'Check before sending', make: () => sendTab() },
 ] as const

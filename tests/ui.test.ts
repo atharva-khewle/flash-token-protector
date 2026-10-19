@@ -9,9 +9,9 @@ beforeAll(async () => {
 })
 
 describe('UI', () => {
-  it('renders three tabs and shows the verify tab first', () => {
+  it('renders four tabs and shows the verify tab first', () => {
     const tabs = [...document.querySelectorAll('[role=tab]')].map((b) => b.textContent)
-    expect(tabs).toEqual(['Verify tx', 'Scan wallet', 'Check before sending'])
+    expect(tabs).toEqual(['Verify tx', 'Check token', 'Scan wallet', 'Check before sending'])
     expect((document.getElementById('tab-verify') as HTMLElement).hidden).toBe(false)
     expect((document.getElementById('tab-scan') as HTMLElement).hidden).toBe(true)
   })
@@ -45,5 +45,20 @@ describe('UI', () => {
     send.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
     await new Promise((r) => setTimeout(r, 0))
     expect(send.textContent).toContain('LOOKALIKE')
+  })
+
+  it('token tab refuses a tx hash pasted as an address', () => {
+    const tab = document.getElementById('tab-token')!
+    ;(tab.querySelector('input') as HTMLInputElement).value = `0x${'ab'.repeat(32)}`
+    tab.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(tab.querySelector('.error')!.textContent).toMatch(/40 hex/)
+  })
+
+  it('token tab says REAL USDT for the hardcoded BSC contract without network', async () => {
+    const tab = document.getElementById('tab-token')!
+    const input = tab.querySelector('input') as HTMLInputElement
+    input.value = '0x55d398326f99059fF775485246999027B3197955'
+    tab.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
+    await expect.poll(() => tab.querySelector('.badge')?.textContent).toBe('REAL USDT')
   })
 })

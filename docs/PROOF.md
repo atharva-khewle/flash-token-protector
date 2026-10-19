@@ -76,6 +76,7 @@ Both run in a real Chromium, driving the real UI.
 - [`E25-7702.png`](proof/website/E25-7702.png)
 - [`baseline.png`](proof/website/baseline.png)
 - [`send-lookalike.png`](proof/website/send-lookalike.png)
+- [`token-fake.png`](proof/website/token-fake.png)
 
 **Chrome extension** (release code, loaded unpacked, `npm run e2e:ext`):
 

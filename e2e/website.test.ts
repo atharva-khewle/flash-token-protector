@@ -35,10 +35,13 @@ const SCAN_EXPECT: Record<string, string> = {
 }
 const SHOT_IDS = new Set(['baseline', 'A1-fake-tether', 'B9-honeypot', 'C14-mixed', 'C20-block-hash', 'D21-zero-value', 'E25-7702'])
 
+let deployed: Awaited<ReturnType<typeof deployAll>>
+
 beforeAll(async () => {
   if (!existsSync(CHROME)) throw new Error('Chromium not found. Set FTP_CHROMIUM or run: npx playwright-core install chromium')
   anvil = await startAnvil()
   const d = await deployAll(anvil.rpc)
+  deployed = d
   registerLocal(d)
   const ctx = await makeCtx(d)
   for (const s of scenarios) {
@@ -103,6 +106,32 @@ describe('website (testnet build) in a real browser', () => {
       }
     })
   }
+
+  it('Check token tab: mock USDT is REAL, every fake named USDT is FAKE USDT, a non-contract is NOT A CONTRACT', async () => {
+    await page.goto(`http://127.0.0.1:${PORT}/`)
+    await page.locator('#tabbtn-token').click()
+    const form = page.locator('#tab-token form')
+    await form.locator('select').selectOption('local')
+    const badge = page.locator('#tab-token .verdict .badge')
+    const cases: [string, string][] = [
+      [deployed.mockUsdt, 'REAL USDT'],
+      [deployed.tokens.fakeUsdt!, 'FAKE USDT'],
+      [deployed.tokens.homoglyph!, 'FAKE USDT'],
+      [deployed.tokens.tugrik!, 'FAKE USDT'],
+      [deployed.tokens.sixDecimals!, 'FAKE USDT'],
+      [deployed.tokens.proxyToken!, 'FAKE USDT'],
+      [deployed.accounts!.B_receiver!, 'NOT A CONTRACT'],
+    ]
+    for (const [address, want] of cases) {
+      await form.locator('input').fill(address)
+      await form.locator('button[type=submit]').click()
+      await expect.poll(() => badge.textContent(), { timeout: 30_000, message: address }).toBe(want)
+    }
+    await form.locator('input').fill(deployed.tokens.fakeUsdt!)
+    await form.locator('button[type=submit]').click()
+    await expect.poll(() => badge.textContent()).toBe('FAKE USDT')
+    await page.screenshot({ path: join(SHOTS, 'token-fake.png'), fullPage: true })
+  })
 
   it('check-before-sending flags a lookalike of a saved address (no chain call needed for the verdict)', async () => {
     await page.goto(`http://127.0.0.1:${PORT}/`)
