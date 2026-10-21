@@ -535,3 +535,47 @@ details.faq p {
     justify-content: flex-start;
   }
 }
+
+/* Servers panel */
+
+.serversbox summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.serversbox h4 {
+  margin: 14px 0 4px;
+  font-size: 14px;
+}
+
+.servers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.server {
+  background: var(--panel-2);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.server-conflicts {
+  box-shadow: 0 0 0 1px var(--bad) inset;
+}
+
+.serverhead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.serverhead .badge {
+  margin-left: 0;
+  font-size: 11px;
+}

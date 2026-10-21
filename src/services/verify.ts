@@ -2,7 +2,7 @@
 
 import { encodeFunctionData, decodeFunctionResult, parseAbi } from 'viem'
 import { adapterFor } from '../chains'
-import type { Hex } from '../chains/types'
+import type { Hex, NormReceipt, ProviderResult } from '../chains/types'
 import type { ChainKey } from '../registry/chains'
 import { canonicalUsdt } from '../registry/usdt'
 import { wasAccepted } from '../lib/storage'
@@ -24,6 +24,8 @@ export interface VerifyOutput extends TxResult {
   hash: string
   blockTimestamp: number | null
   decoyRisks: DecoyRisk[]
+  /** Every server's raw answer, for the 'servers' panel. */
+  providers: ProviderResult<NormReceipt>[]
 }
 
 async function isBlacklisted(chain: ChainKey, who: Hex): Promise<boolean | null> {
@@ -88,5 +90,5 @@ export async function runVerify(args: {
     }),
   )
 
-  return { ...result, chain: args.chain, hash: args.hash, blockTimestamp, decoyRisks }
+  return { ...result, chain: args.chain, hash: args.hash, blockTimestamp, decoyRisks, providers }
 }

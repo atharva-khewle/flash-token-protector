@@ -10,6 +10,7 @@ import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium, type BrowserContext, type Page } from 'playwright-core'
+import { CHAINS } from '../src/registry/chains'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { getAddress } from 'viem'
 
@@ -203,7 +204,7 @@ describe('extension in real Chrome', () => {
     await p.locator('#tab-verify form input').nth(1).fill(REAL_TO)
     await p.getByRole('button', { name: 'Verify', exact: true }).click()
     await p.locator('#tab-verify .verdict .badge').waitFor({ timeout: 45_000 })
-    const allowed = new Set(['self', 'bsc-dataseed.bnbchain.org', '1rpc.io', 'bsc-rpc.publicnode.com'])
+    const allowed = new Set(['self', ...[...CHAINS.bsc.rpcs, ...CHAINS.bsc.logRpcs].map((u) => new URL(u).host)])
     for (const h of hosts) expect(allowed.has(h), `unexpected host ${h}`).toBe(true)
     await p.close()
   }, 90_000)

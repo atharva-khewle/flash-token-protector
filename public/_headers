@@ -1,5 +1,5 @@
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://bsc-dataseed.bnbchain.org https://1rpc.io https://bsc-rpc.publicnode.com https://ethereum-rpc.publicnode.com https://eth.drpc.org https://api.trongrid.io https://tron-rpc.publicnode.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://bsc-dataseed.bnbchain.org https://bsc-dataseed1.defibit.io https://bsc-dataseed1.ninicoin.io https://1rpc.io https://bsc-rpc.publicnode.com https://eth.drpc.org https://rpc.mevblocker.io https://eth-mainnet.public.blastapi.io https://ethereum-rpc.publicnode.com https://api.trongrid.io https://tron-rpc.publicnode.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: no-referrer

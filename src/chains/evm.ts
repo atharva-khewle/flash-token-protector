@@ -45,6 +45,15 @@ function client(url: string): Raw {
 
 const lc = (s: string) => s.toLowerCase() as Hex
 
+/** Returns the receipt only if it has the fields every honest node returns. */
+function validReceipt(r: unknown): RawReceipt | null {
+  if (!r || typeof r !== 'object') return null
+  const x = r as Partial<RawReceipt>
+  if (typeof x.status !== 'string' || typeof x.blockNumber !== 'string' || typeof x.blockHash !== 'string' || typeof x.from !== 'string') return null
+  if (!Array.isArray(x.logs)) return null
+  return x as RawReceipt
+}
+
 export function normalizeEvmReceipt(chain: ChainInfo['key'], hash: string, r: RawReceipt): NormReceipt {
   return {
     chain,
@@ -85,18 +94,34 @@ export class EvmAdapter implements ChainAdapter {
     return Promise.all(
       this.rpcs.map(async ({ url, raw }): Promise<ProviderResult<NormReceipt>> => {
         const provider = hostOf(url)
+        const t0 = Date.now()
+        // The head this server knows tells "behind" apart from "says it does not exist".
+        const headP = raw('eth_blockNumber', []).then(
+          (h) => (typeof h === 'string' && /^0x[0-9a-f]+$/i.test(h) ? BigInt(h) : null),
+          () => null,
+        )
         try {
-          const r = (await raw('eth_getTransactionReceipt', [hash])) as RawReceipt | null
-          if (r) return { provider, ok: true, value: normalizeEvmReceipt(this.chain, hash, r) }
-          const tx = (await raw('eth_getTransactionByHash', [hash])) as { blockNumber: string | null } | null
+          const r = await raw('eth_getTransactionReceipt', [hash])
+          // A rate-limited or broken server can answer with no result at all. That is a failure,
+          // not "transaction not found": only an explicit null means not found.
+          if (r === undefined) throw new Error('empty reply (often rate limiting)')
+          if (r !== null) {
+            const v = validReceipt(r)
+            if (!v) throw new Error('malformed receipt (missing fields)')
+            return { provider, ok: true, value: normalizeEvmReceipt(this.chain, hash, v), head: await headP, ms: Date.now() - t0 }
+          }
+          const tx = await raw('eth_getTransactionByHash', [hash])
+          if (tx === undefined) throw new Error('empty reply (often rate limiting)')
           const status = tx ? 'pending' : 'notfound'
           return {
             provider,
             ok: true,
             value: { chain: this.chain, hash, status, blockNumber: null, blockHash: null, from: null, to: null, logs: [] },
+            head: await headP,
+            ms: Date.now() - t0,
           }
         } catch (e) {
-          return { provider, ok: false, error: errMsg(e) }
+          return { provider, ok: false, error: errMsg(e), head: await headP, ms: Date.now() - t0 }
         }
       }),
     )

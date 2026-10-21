@@ -8,6 +8,7 @@ import { LAYER_NAMES } from '../verdict/types'
 import type { Hex } from '../chains/types'
 import { clear, field, h, maybeLink } from './dom'
 import { addr, badge, busy, chainSelect, note, statusIcon } from './common'
+import { renderProviders } from './providersView'
 
 export const VERDICT_TEXT: Record<VerifyOutput['verdict'], string> = {
   VERIFIED: 'Canonical USDT arrived at your address and every required check passed.',
@@ -113,6 +114,8 @@ function renderResult(r: VerifyOutput): HTMLElement {
   }
   wrap.appendChild(h('h3', {}, 'Checks'))
   wrap.appendChild(list)
+  const servers = renderProviders(r.providers)
+  if (servers) wrap.appendChild(servers)
 
   if (r.net.length > 0) {
     const t = h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Address'), h('th', {}, 'Net USDT change'))))

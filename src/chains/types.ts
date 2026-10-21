@@ -26,9 +26,15 @@ export interface NormReceipt {
   logs: NormLog[]
 }
 
+/** What one server said, plus how fresh it was. `head` = the latest block that server knew about. */
+export interface ProviderMeta {
+  head?: bigint | null
+  ms?: number
+}
+
 export type ProviderResult<T> =
-  | { provider: string; ok: true; value: T }
-  | { provider: string; ok: false; error: string }
+  | ({ provider: string; ok: true; value: T } & ProviderMeta)
+  | ({ provider: string; ok: false; error: string } & ProviderMeta)
 
 export interface Finality {
   head: bigint

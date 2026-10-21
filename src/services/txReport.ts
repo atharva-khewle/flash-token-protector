@@ -1,7 +1,7 @@
 // Fetches everything a transaction touches, then hands it to the pure report rules.
 
 import { adapterFor } from '../chains'
-import type { Hex } from '../chains/types'
+import type { Hex, NormReceipt, ProviderResult } from '../chains/types'
 import type { ChainKey } from '../registry/chains'
 import { canonicalUsdt } from '../registry/usdt'
 import { finalityCheck } from '../verdict/finality'
@@ -22,6 +22,8 @@ export interface TxReportOutput extends TxReport {
   blockNumber: bigint | null
   /** Contracts beyond the probe limit, left unjudged. */
   skippedTokens: number
+  /** Every server's raw answer, for the 'servers' panel. */
+  providers: ProviderResult<NormReceipt>[]
 }
 
 export async function runTxReport(args: { chain: ChainKey; hash: string; hiddenChars: number }): Promise<TxReportOutput> {
@@ -100,5 +102,5 @@ export async function runTxReport(args: { chain: ChainKey; hash: string; hiddenC
 
   const report = buildReport({ chain, hash, isBlockHash, checks, receipt, tokens, codes })
   if (skippedTokens > 0) report.problems.push({ level: 'warn', text: `${skippedTokens} more token contract(s) in this transaction were not checked (limit ${MAX_TOKENS}). A transaction touching this many tokens is unusual.` })
-  return { ...report, chain, hash, blockNumber: receipt?.blockNumber ?? null, skippedTokens }
+  return { ...report, chain, hash, blockNumber: receipt?.blockNumber ?? null, skippedTokens, providers }
 }

@@ -7,6 +7,7 @@ import type { Finality, Hex, NormReceipt, ProviderResult } from '../chains/types
 import { displayAddress } from '../lib/address'
 import { findLookalikes } from '../lib/lookalike'
 import { finalityCheck } from './finality'
+import { analyzeProviders, type ProviderAnalysis } from './providers'
 import { analyzeTransfers, formatUnits, type Decoy } from './transfer'
 import { combine, type Check, type Verdict } from './types'
 
@@ -54,41 +55,29 @@ export interface TxResult {
 
 const DUST_THRESHOLD_USD = 1n
 
-export function receiptFingerprint(r: NormReceipt): string {
-  const logs = r.logs
-    .map((l) => `${l.address.toLowerCase()}|${l.topics.map((t) => t.toLowerCase()).join(',')}|${l.data.toLowerCase()}`)
-    .join(';')
-  return [r.status, r.blockNumber?.toString() ?? '-', (r.blockHash ?? '-').toLowerCase(), logs].join('#')
-}
+export { receiptFingerprint } from './providers'
 
-export function consensusCheck(providers: ProviderResult<NormReceipt>[]): { check: Check; receipt: NormReceipt | null } {
+/**
+ * L1 consensus. Passes only when at least two servers return the identical mined receipt and no
+ * server that has seen that block contradicts them. Servers that are behind or rate-limited are
+ * reported but do not count against the others.
+ */
+export function consensusCheck(providers: ProviderResult<NormReceipt>[]): { check: Check; receipt: NormReceipt | null; analysis: ProviderAnalysis } {
   const base = { id: 'L1.consensus', layer: 'L1' as const, required: true, vectors: ['F30'] }
-  const ok = providers.filter((p): p is Extract<typeof p, { ok: true }> => p.ok)
-  if (ok.length === 0) {
-    return { check: { ...base, status: 'skip', reason: 'No RPC provider answered. Try again later.' }, receipt: null }
-  }
-  const prints = new Map<string, string[]>()
-  for (const p of ok) {
-    const fp = receiptFingerprint(p.value)
-    prints.set(fp, [...(prints.get(fp) ?? []), p.provider])
-  }
-  const first = ok[0]!.value
-  if (prints.size > 1) {
-    const groups = [...prints.values()].map((g) => g.join(' + ')).join(' vs ')
-    return {
-      check: { ...base, status: 'warn', reason: `Providers disagree (${groups}). One of them may be lagging or lying.` },
-      receipt: first,
-    }
-  }
-  if (ok.length < 2) {
-    return {
-      check: { ...base, status: 'warn', reason: `Only one provider answered (${ok[0]!.provider}). Two independent answers are required.` },
-      receipt: first,
-    }
-  }
-  return {
-    check: { ...base, status: 'pass', reason: `${ok.length} independent providers returned the same receipt.` },
-    receipt: first,
+  const analysis = analyzeProviders(providers)
+  const firstAnswer = providers.find((p): p is Extract<typeof p, { ok: true }> => p.ok)?.value ?? null
+  const receipt = analysis.receipt ?? firstAnswer
+  switch (analysis.outcome) {
+    case 'no-answer':
+      return { check: { ...base, status: 'skip', reason: 'No RPC server answered. Try again later.' }, receipt: null, analysis }
+    case 'agree':
+      return { check: { ...base, status: 'pass', reason: analysis.summary }, receipt, analysis }
+    case 'single':
+      return { check: { ...base, status: 'warn', reason: `${analysis.summary} Two matching answers are required.` }, receipt, analysis }
+    case 'conflict':
+      return { check: { ...base, status: 'warn', reason: `${analysis.summary} ${analysis.believe}` }, receipt, analysis }
+    default:
+      return { check: { ...base, status: 'pass', reason: analysis.summary }, receipt, analysis }
   }
 }
 
@@ -148,6 +137,14 @@ export function verifyTx(ev: TxEvidence): TxResult {
         ? 'Transaction is pending (not in any block). It can still be replaced or dropped. Nothing has been received.'
         : 'No provider knows this transaction on this chain. Check the chain, or it was never broadcast / was dropped.',
       vectors: ['C16', 'A5'],
+    })
+    const unreachable = ev.providers.filter((p) => !p.ok).length
+    if (unreachable > 0) checks.push({
+      id: 'L1.unreachable',
+      layer: 'L1',
+      status: 'warn',
+      required: false,
+      reason: `${unreachable} server(s) could not answer, so a very recent transaction may be missing here. Check again in a minute.`,
     })
     return { ...empty, verdict: combine(checks) }
   }

@@ -8,6 +8,7 @@ import type { Headline, Level, ReportToken } from '../verdict/txReport'
 import type { TokenVerdict } from '../verdict/tokenCheck'
 import { clear, field, h, maybeLink } from './dom'
 import { addr, badge, busy, chainSelect, note } from './common'
+import { renderProviders } from './providersView'
 
 const HEAD_KIND: Record<Headline, string> = {
   'NOT ON CHAIN': 'bad',
@@ -102,6 +103,9 @@ export function renderReport(r: TxReportOutput): HTMLElement {
     for (const p of r.problems) ul.appendChild(h('li', { class: LEVEL_CLASS[p.level] }, h('strong', {}, `${LEVEL_TAG[p.level]} `), p.text))
     wrap.appendChild(ul)
   }
+
+  const servers = renderProviders(r.providers)
+  if (servers) wrap.appendChild(servers)
 
   if (r.tokens.length > 0) {
     wrap.appendChild(h('h3', {}, `Tokens moved (${r.tokens.length})`))

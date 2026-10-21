@@ -42,10 +42,13 @@ const MAINNET: Record<'bsc' | 'eth' | 'tron', ChainInfo> = {
     name: 'BNB Smart Chain (BEP20)',
     chainId: 56,
     nativeSymbol: 'BNB',
+    // Ordered by how reliable they were in our tests (src/registry/providers.ts). 1rpc is last:
+    // it rate-limits and lags. PublicNode now refuses older receipts without a token.
     rpcs: [
       'https://bsc-dataseed.bnbchain.org',
+      'https://bsc-dataseed1.defibit.io',
+      'https://bsc-dataseed1.ninicoin.io',
       'https://1rpc.io/bnb',
-      'https://bsc-rpc.publicnode.com',
     ],
     logRpcs: ['https://bsc-rpc.publicnode.com'],
     logChunk: 5000,
@@ -62,10 +65,13 @@ const MAINNET: Record<'bsc' | 'eth' | 'tron', ChainInfo> = {
     name: 'Ethereum (ERC20)',
     chainId: 1,
     nativeSymbol: 'ETH',
+    // PublicNode is blocked by some internet providers; 1rpc rate-limits. Both stay as extra voices.
     rpcs: [
+      'https://eth.drpc.org',
+      'https://rpc.mevblocker.io',
+      'https://eth-mainnet.public.blastapi.io',
       'https://ethereum-rpc.publicnode.com',
       'https://1rpc.io/eth',
-      'https://eth.drpc.org',
     ],
     logRpcs: ['https://ethereum-rpc.publicnode.com'],
     logChunk: 5000,
