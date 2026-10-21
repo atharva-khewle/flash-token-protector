@@ -17,7 +17,8 @@ function items(): { group: string; list: Item[] }[] {
         {
           q: 'Which tab should I use?',
           a: [
-            'Someone says they paid you and gave a transaction hash: use Analyze tx (just the hash) or Verify tx (hash plus your address, for a final answer).',
+            'Someone says they paid you and gave a transaction hash: use Analyze tx (just the hash). For a final yes or no for your own address, use Verify tx.',
+            'You want to look at an address (yours or someone else\'s) for fake tokens, poisoning, risky approvals or account takeovers: use Analyze address.',
             'You have a token address and want to know if it is the real USDT: use Check token.',
             'You want to watch your own wallet and have every new transfer checked for you: use My wallet.',
             'You are about to send money and want to be sure the address is right: use Check before sending.',
@@ -42,7 +43,7 @@ function items(): { group: string; list: Item[] }[] {
         {
           q: 'What do VERIFIED, FAKE, UNVERIFIED and NOT RECEIVED mean?',
           a: [
-            'VERIFIED: real USDT reached your address in a final block, confirmed by two independent providers.',
+            'VERIFIED: real USDT reached your address in a final block, confirmed by two independent servers that returned the identical answer.',
             'FAKE: the transaction does not prove a real USDT payment to you (wrong token, wrong recipient, wrong amount, or a failed transaction). Do not release goods or money.',
             'UNVERIFIED: not proven either way. Often it is just too early. Read the warnings and check again.',
             'NOT RECEIVED: nothing is on this chain for that hash, or it is still pending.',
@@ -59,6 +60,13 @@ function items(): { group: string; list: Item[] }[] {
         {
           q: 'The app says VERIFIED but my exchange has not credited it.',
           a: ['The exchange\'s deposit history is the final truth for your exchange balance. Exchanges wait for their own confirmation count and may have different deposit rules.'],
+        },
+        {
+          q: 'It says the servers disagree. What does that mean?',
+          a: [
+            'The app asks several free public blockchain servers and only trusts an answer that at least two of them return identically. The "Servers" panel shows what each one said, how up to date it was, and how reliable it has been in our tests.',
+            'Most of the time one server is just a few blocks behind, rate-limited, or blocked by your internet provider. That is not fraud; the panel says so. Real conflicts (two servers with different data for the same block) usually mean a recent block is being reorganized. Wait a few minutes and check again before accepting a payment.',
+          ],
         },
         {
           q: 'Where do I find a transaction hash or a token address?',

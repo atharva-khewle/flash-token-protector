@@ -9,8 +9,8 @@ import { addr, badge, busy, chainSelect, diffAddress, note } from './common'
 
 export function scanTab(onWatchChange: () => void): HTMLElement {
   const chain = chainSelect('bsc')
-  const address = h('input', { type: 'text', placeholder: 'Address to scan', autocomplete: 'off', spellcheck: 'false' })
-  const btn = h('button', { type: 'submit', class: 'primary' }, 'Scan')
+  const address = h('input', { type: 'text', placeholder: 'Address to analyze', autocomplete: 'off', spellcheck: 'false' })
+  const btn = h('button', { type: 'submit', class: 'primary' }, 'Analyze address')
   const out = h('div', { class: 'result', 'aria-live': 'polite' })
   const err = h('p', { class: 'error', role: 'alert' })
   const watchBox = h('div', { class: 'card' })
@@ -62,13 +62,13 @@ export function scanTab(onWatchChange: () => void): HTMLElement {
     const watch = getWatchlist(c)
       .map((w) => parseAddress(w.address, fam))
       .flatMap((x) => (x.ok ? [x.hex] : []))
-    busy(btn, true, 'Scan')
+    busy(btn, true, 'Analyze address')
     try {
       out.appendChild(renderScan(await runScan(c, p.hex, watch)))
     } catch (e2) {
       out.appendChild(note(`Scan failed: ${e2 instanceof Error ? e2.message : String(e2)}`, 'warn'))
     } finally {
-      busy(btn, false, 'Scan')
+      busy(btn, false, 'Analyze address')
     }
   })
 

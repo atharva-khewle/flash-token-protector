@@ -7,7 +7,7 @@ A read-only web app that answers six questions for people who send or receive US
 1. **Analyze tx**: paste only a chain and a tx hash. It lists every address and every token in the transaction, judges each token by its contract address, and tells you what looks wrong (fake "USDT", zero-value or dust poisoning, failed or unfinalized tx, lookalike addresses).
 2. **My wallet**: follow an address (connect a browser wallet, or just paste one). See the real USDT balance and recent transfers, with fake-looking tokens, dust, zero-value transfers and lookalike addresses marked. Every new transfer is checked automatically while the page is open, and clicking any transfer opens the full analysis. Also: trust an address, check an address before you pay, export CSV, optional notifications. Connecting is optional and read-only (the app only asks which account is selected).
 3. **Verify tx**: the buyer says "I sent you 5,000 USDT, here is the hash". Is it real, final, sent to *my* address, and actually USDT?
-4. **Scan wallet**: does my history show fake USDT, zero-value transfers or lookalike addresses? Is someone poisoning me? Do I have risky approvals, or an EIP-7702 delegation I did not set?
+4. **Analyze address**: does my history show fake USDT, zero-value transfers or lookalike addresses? Is someone poisoning me? Do I have risky approvals, or an EIP-7702 delegation I did not set?
 5. **Check token**: paste a token contract address. Is it the real USDT for that chain, a fake that only calls itself USDT, or a different token? The real BSC USDT is hardcoded (`0x55d398326f99059fF775485246999027B3197955`) and the check is an exact address match.
 6. **Check before sending**: is the address I'm about to withdraw to a lookalike of one I use?
 
@@ -167,8 +167,8 @@ Each chain is caught at the first layer that breaks it. A chain is only as stron
 1. **Fake token + lookalike sender + fake explorer link + time pressure** (A1 + D22 + F29 + F46). Caught at L2: the emitter is not canonical, so FAKE whatever the link or sender looks like. The user pastes the hash, not the link.
 2. **Tiny real payment + big fake payment in one tx + screenshot of the token tab** (C14 + A1 + F28). L3 counts canonical logs only. The decoy that credits you turns the verdict into UNVERIFIED. With an expected amount it is FAKE.
 3. **Real old payment + edited timestamp + "same buyer, second order"** (C18 + F28). Caught by L4 "deal started at" and the local accepted-hash list.
-4. **Dust poisoning → user withdraws from Binance to the lookalike** (D22 + D23). Scan wallet flags the lookalike. The send check shows the per-character diff. Main mitigation: the Binance withdrawal whitelist.
-5. **"Free wallet with USDT" seed + "send 50 TRX for fees"** (E26 + E27). Scan wallet reports that the owner permission belongs to someone else.
+4. **Dust poisoning → user withdraws from Binance to the lookalike** (D22 + D23). Analyze address flags the lookalike. The send check shows the per-character diff. Main mitigation: the Binance withdrawal whitelist.
+5. **"Free wallet with USDT" seed + "send 50 TRX for fees"** (E26 + E27). Analyze address reports that the owner permission belongs to someone else.
 6. **Honeypot fake USDT with a $1 pool + "swap it yourself"** (A3 + B9 + A7). L2 = FAKE. L6 shows the honeypot simulation result. The name-URL lure is flagged.
 7. **Real but unfinalized tx + quick release + reorg/replacement** (C16/C17 + F46). L1 finality: UNVERIFIED until finalized.
 8. **Clone of this site that always says VERIFIED + link sent by the "buyer"** (F32d + F45). Residual. Mitigation: bookmark the real domain and never use a checker link sent by the counterparty.

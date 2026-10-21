@@ -11,7 +11,7 @@ beforeAll(async () => {
 describe('UI', () => {
   it('renders seven tabs and shows the analyze tab first', () => {
     const tabs = [...document.querySelectorAll('[role=tab]')].map((b) => b.textContent)
-    expect(tabs).toEqual(['Analyze tx', 'My wallet', 'Verify tx', 'Check token', 'Scan wallet', 'Check before sending', 'Help'])
+    expect(tabs).toEqual(['Analyze tx', 'Analyze address', 'Check token', 'Verify tx', 'My wallet', 'Check before sending', 'Help'])
     expect((document.getElementById('tab-tx') as HTMLElement).hidden).toBe(false)
     expect((document.getElementById('tab-scan') as HTMLElement).hidden).toBe(true)
   })

@@ -36,7 +36,7 @@ Nothing here asks you to trust a screenshot. Every row below is produced by code
 | PASS | `C16-pending` | C16 | Pending tx shown as proof, then dropped | NOT RECEIVED while pending; NOT RECEIVED after it is dropped | `0xf202288a…0f53` |
 | PASS | `C18-wrong-context` | C18 | Real payment to someone else; old payment reused; same hash twice | wrong recipient: FAKE; old payment vs deal start: FAKE; reused hash: UNVERIFIED; no recipient given: UNVERIFIED | `0x23253d83…b884` `0x09e703e2…b481` `0x5b876f96…e114` |
 | PASS | `C19-in-and-out` | C19, E24 | USDT credited to B and pulled back in the same tx | FAKE; net 0 (100 in, 100 out in one tx) | `0x04a64589…519a` |
-| PASS | `C20-block-hash` | C20 | A block hash given instead of a tx hash | FAKE; "This is a block hash, not a transaction hash" | `0x9944e034…1e65` |
+| PASS | `C20-block-hash` | C20 | A block hash given instead of a tx hash | FAKE; "This is a block hash, not a transaction hash" | `0xc6157d2d…9c47` |
 | PASS | `C37-router` | C37 | Payment routed through a contract (tx.to is not USDT) | VERIFIED; decisions use logs, never tx.to | `0x51d73fa8…855a` |
 | PASS | `D21-zero-value` | D21, D23 | Zero-value transferFrom(B, lookalike, 0) planted by the attacker | scan: zero-value poisoning from 0xf39fd6ff..., imitates A (first/last 6/9 chars). Send check: LOOKALIKE | `0x4fc557ec…d6da` |
 | PASS | `D22-vanity-dust` | D22, D23 | Dust of real USDT from a vanity lookalike | scan: lookalike dust flagged. Verify: UNVERIFIED (0.001 USDT is dust) | `0x8bdb6d90…ef9b` |

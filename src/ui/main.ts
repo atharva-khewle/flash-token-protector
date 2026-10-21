@@ -15,10 +15,10 @@ const REPO = 'https://github.com/atharva-khewle/flash-token-protector'
 
 const TABS = [
   { id: 'tx', label: 'Analyze tx', make: () => txTab() },
-  { id: 'wallet', label: 'My wallet', make: () => walletTab() },
-  { id: 'verify', label: 'Verify tx', make: () => verifyTab() },
+  { id: 'scan', label: 'Analyze address', make: () => scanTab(() => undefined) },
   { id: 'token', label: 'Check token', make: () => tokenTab() },
-  { id: 'scan', label: 'Scan wallet', make: () => scanTab(() => undefined) },
+  { id: 'verify', label: 'Verify tx', make: () => verifyTab() },
+  { id: 'wallet', label: 'My wallet', make: () => walletTab() },
   { id: 'send', label: 'Check before sending', make: () => sendTab() },
   { id: 'faq', label: 'Help', make: () => faqTab() },
 ] as const
