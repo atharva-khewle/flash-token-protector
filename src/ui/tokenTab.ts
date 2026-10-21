@@ -4,6 +4,8 @@ import { parseAddress } from '../lib/input'
 import { runTokenCheck, type TokenCheckOutput } from '../services/tokenCheck'
 import type { TokenVerdict } from '../verdict/tokenCheck'
 import { clear, field, h, maybeLink } from './dom'
+import { summaryCard } from './summary'
+import { plainToken } from '../verdict/plain'
 import { addr, badge, busy, chainSelect, diffAddress, note } from './common'
 
 const KIND: Record<TokenVerdict, string> = {
@@ -38,7 +40,8 @@ export function tokenTab(): HTMLElement {
     if (!p.ok) return void (err.textContent = p.reason)
     busy(btn, true, 'Check token')
     try {
-      out.appendChild(render(c, p.display, p.hidden, await runTokenCheck({ chain: c, token: p.hex })))
+      const res = await runTokenCheck({ chain: c, token: p.hex })
+      out.appendChild(summaryCard(plainToken(res), render(c, p.display, p.hidden, res)))
     } catch (e2) {
       out.appendChild(note(`Could not complete the check: ${e2 instanceof Error ? e2.message : String(e2)}. This is not a confirmation that the token is real.`, 'warn'))
     } finally {

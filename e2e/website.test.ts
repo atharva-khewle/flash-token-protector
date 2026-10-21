@@ -71,7 +71,9 @@ async function submit(tab: 'verify' | 'scan', fill: (inputs: string[]) => Promis
   await form.locator('select').selectOption('local')
   await fill([])
   await form.locator('button[type=submit]').click()
-  await page.locator(`#tab-${tab} .result > .card`).waitFor({ timeout: 30_000 })
+  await page.locator(`#tab-${tab} .result .plain`).waitFor({ timeout: 30_000 })
+  // Unfold the full details so the checks below (and the screenshots) see everything.
+  await page.locator(`#tab-${tab} .result .detailsbtn`).click()
 }
 
 describe('website (testnet build) in a real browser', () => {

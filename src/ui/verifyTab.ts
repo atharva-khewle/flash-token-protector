@@ -9,6 +9,8 @@ import type { Hex } from '../chains/types'
 import { clear, field, h, maybeLink } from './dom'
 import { addr, badge, busy, chainSelect, note, statusIcon } from './common'
 import { renderProviders } from './providersView'
+import { summaryCard } from './summary'
+import { plainVerify } from '../verdict/plain'
 
 export const VERDICT_TEXT: Record<VerifyOutput['verdict'], string> = {
   VERIFIED: 'Canonical USDT arrived at your address and every required check passed.',
@@ -71,7 +73,7 @@ export function verifyTab(): HTMLElement {
     busy(btn, true, 'Verify')
     try {
       const r = await runVerify({ chain: c, hash: ph.hash, hiddenChars: ph.hidden, context: { recipient: rec, amount: amt, notBefore: nb }, watchlist: watch })
-      out.appendChild(renderResult(r))
+      out.appendChild(summaryCard(plainVerify(r), renderResult(r)))
     } catch (e2) {
       out.appendChild(note(`Could not complete the check: ${e2 instanceof Error ? e2.message : String(e2)}. Result: UNVERIFIED.`, 'warn'))
     } finally {

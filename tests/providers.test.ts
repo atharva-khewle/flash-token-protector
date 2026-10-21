@@ -60,3 +60,14 @@ describe('analyzeProviders', () => {
     expect(a.rows[0]!.why).toMatch(/could not be reached/i)
   })
 })
+
+describe('deep transactions', () => {
+  it('a relay saying "pending" for a tx 10,000 blocks deep is limited, not a conflict', () => {
+    const deep = { ...mined, blockNumber: 1000n }
+    const pending = ok('1rpc.io', { ...mined, status: 'pending', blockNumber: null, blockHash: null, logs: [] }, 11_000n)
+    const a = analyzeProviders([ok('a', deep, 11_000n), ok('b', deep, 11_000n), pending])
+    expect(a.outcome).toBe('agree')
+    expect(a.rows[2]!.role).toBe('limited')
+    expect(a.rows[2]!.why).toMatch(/cannot disappear/)
+  })
+})

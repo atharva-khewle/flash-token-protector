@@ -579,3 +579,117 @@ details.faq p {
   margin-left: 0;
   font-size: 11px;
 }
+
+/* Plain-language result summary */
+
+.resultwrap {
+  display: grid;
+}
+
+.plain {
+  padding: clamp(16px, 4vw, 24px);
+}
+
+.plain-good {
+  --tone: var(--ok);
+}
+
+.plain-caution {
+  --tone: var(--warn);
+}
+
+.plain-danger {
+  --tone: var(--bad);
+}
+
+.plainhead {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.dial {
+  --pct: 0%;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--tone) var(--pct), rgba(143, 143, 154, 0.18) 0);
+  position: relative;
+}
+
+.dial::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--panel);
+}
+
+.dialicon {
+  position: relative;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--tone);
+}
+
+.risklabel {
+  color: var(--tone);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.plaintitle h2 {
+  margin: 2px 0 0;
+  font-size: clamp(18px, 4vw, 22px);
+  line-height: 1.3;
+}
+
+.plainpoints {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.plaintodo {
+  margin-top: 14px;
+  background: var(--panel-2);
+  border-radius: 14px;
+  padding: 10px 14px;
+}
+
+.plaintodo ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+.plainfoot {
+  margin-top: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.detailsbtn {
+  background: var(--panel-2);
+  font-weight: 600;
+}
+
+.fulldetails > .card {
+  margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .dial {
+    width: 58px;
+    height: 58px;
+  }
+  .dialicon {
+    font-size: 22px;
+  }
+}

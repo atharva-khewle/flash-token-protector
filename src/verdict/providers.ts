@@ -53,6 +53,9 @@ function errorWhy(raw: string): string {
   return `Error: ${(lines[0] ?? raw).slice(0, 120)}`
 }
 
+/** Blocks after which a mined transaction is treated as settled for this purpose (beyond BSC and Ethereum finality). */
+const DEEP_BLOCKS = 64n
+
 const mined = (r: NormReceipt) => (r.status === 'success' || r.status === 'reverted') && r.blockNumber !== null
 
 export function analyzeProviders(providers: ProviderResult<NormReceipt>[]): ProviderAnalysis {
@@ -67,6 +70,7 @@ export function analyzeProviders(providers: ProviderResult<NormReceipt>[]): Prov
   const best = [...groups.values()].sort((a, b) => b.members.length - a.members.length)[0] ?? null
   const bestFp = best ? receiptFingerprint(best.receipt) : null
   const block = best?.receipt.blockNumber ?? null
+  const maxHead = providers.reduce<bigint | null>((m, p) => (p.head != null && (m === null || p.head > m) ? p.head : m), null)
 
   const rows: ProviderRow[] = providers.map((p) => {
     const base = { provider: p.provider, head: p.head ?? null, ms: p.ms ?? null, note: providerNote(p.provider) }
@@ -90,6 +94,17 @@ export function analyzeProviders(providers: ProviderResult<NormReceipt>[]): Prov
     const answer: Answer = r.status === 'pending' ? 'pending' : 'notfound'
     const said = answer === 'pending' ? 'Pending (not in a block)' : 'Not found'
     if (block === null) return { ...base, answer, said, role: 'agrees', why: 'No server has it in a block.' }
+    // A transaction many blocks deep, confirmed identically by two or more servers, cannot vanish.
+    // A server saying otherwise has incomplete data (relays often forward to mixed backends).
+    if (best!.members.length >= 2 && maxHead !== null && maxHead - block >= DEEP_BLOCKS && (base.head === null || base.head >= block)) {
+      return {
+        ...base,
+        answer,
+        said,
+        role: 'limited',
+        why: `Says the transaction is ${answer === 'pending' ? 'pending' : 'not found'}, but it is ${maxHead - block} blocks deep and confirmed by the other servers. A final transaction cannot disappear, so this server's own data is incomplete. Not a sign of fraud.`,
+      }
+    }
     if (base.head !== null && base.head < block) {
       return { ...base, answer, said, role: 'behind', why: `Behind: it only knows up to block ${base.head}, and the transaction is in block ${block} (${block - base.head} block(s) later). It will catch up.` }
     }

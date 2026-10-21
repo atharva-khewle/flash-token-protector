@@ -18,7 +18,7 @@ import { formatUnits } from '../verdict/transfer'
 import { checkDestination, classifyCode } from '../verdict/wallet'
 import { append, clear, field, h } from './dom'
 import { addr, badge, diffAddress, note } from './common'
-import { renderReport } from './txTab'
+import { renderTxResult } from './txTab'
 import { VERDICT_TEXT } from './verifyTab'
 
 const isExtensionPage = () => typeof chrome !== 'undefined' && !!chrome.runtime?.id
@@ -366,7 +366,7 @@ export function walletTab(): HTMLElement {
         )
         renderList()
       }
-      append(card, trustBox(e), renderReport(report))
+      append(card, trustBox(e), renderTxResult(report))
     } catch (err2) {
       clear(card)
       append(card, note(`Could not analyze this transaction: ${err2 instanceof Error ? err2.message : String(err2)}`, 'warn'))

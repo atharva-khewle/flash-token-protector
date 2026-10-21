@@ -5,6 +5,8 @@ import { addWatch, getWatchlist, removeWatch } from '../lib/storage'
 import { runScan, type ScanOutput } from '../services/scan'
 import type { Hex } from '../chains/types'
 import { clear, field, h, maybeLink } from './dom'
+import { summaryCard } from './summary'
+import { plainScan } from '../verdict/plain'
 import { addr, badge, busy, chainSelect, diffAddress, note } from './common'
 
 export function scanTab(onWatchChange: () => void): HTMLElement {
@@ -64,7 +66,8 @@ export function scanTab(onWatchChange: () => void): HTMLElement {
       .flatMap((x) => (x.ok ? [x.hex] : []))
     busy(btn, true, 'Analyze address')
     try {
-      out.appendChild(renderScan(await runScan(c, p.hex, watch)))
+      const res = await runScan(c, p.hex, watch)
+      out.appendChild(summaryCard(plainScan(res), renderScan(res)))
     } catch (e2) {
       out.appendChild(note(`Scan failed: ${e2 instanceof Error ? e2.message : String(e2)}`, 'warn'))
     } finally {

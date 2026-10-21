@@ -9,6 +9,8 @@ import type { TokenVerdict } from '../verdict/tokenCheck'
 import { clear, field, h, maybeLink } from './dom'
 import { addr, badge, busy, chainSelect, note } from './common'
 import { renderProviders } from './providersView'
+import { summaryCard } from './summary'
+import { plainTx } from '../verdict/plain'
 
 const HEAD_KIND: Record<Headline, string> = {
   'NOT ON CHAIN': 'bad',
@@ -47,7 +49,7 @@ export function txTab(): HTMLElement {
     if (!ph.ok) return void (err.textContent = ph.reason)
     busy(btn, true, 'Analyze')
     try {
-      out.appendChild(renderReport(await runTxReport({ chain: c, hash: ph.hash, hiddenChars: ph.hidden })))
+      out.appendChild(renderTxResult(await runTxReport({ chain: c, hash: ph.hash, hiddenChars: ph.hidden })))
     } catch (e2) {
       out.appendChild(note(`Could not complete the check: ${e2 instanceof Error ? e2.message : String(e2)}. This is not a confirmation that anything is fine.`, 'warn'))
     } finally {
@@ -89,6 +91,11 @@ function tokenBlock(r: TxReportOutput, t: ReportToken): HTMLElement {
     h('div', { class: 'muted' }, t.summary),
     rows,
   )
+}
+
+/** Plain summary on top, full report folded underneath. */
+export function renderTxResult(r: TxReportOutput): HTMLElement {
+  return summaryCard(plainTx(r), renderReport(r))
 }
 
 export function renderReport(r: TxReportOutput): HTMLElement {
