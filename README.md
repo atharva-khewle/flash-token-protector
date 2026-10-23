@@ -2,24 +2,9 @@
 
 [![ci](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml/badge.svg)](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml)
 
-A read-only fund-check dashboard for people who send or receive USDT, mostly around Binance on **BNB Smart Chain (BEP20)**. Ethereum and Tron are supported too. It opens in a **Simple** view (a plain answer, a risk dial, a map and an explorer link); **Advanced** unfolds every technical detail.
+A free, read-only website that tells you whether a USDT payment is real before you release goods or money. It is built for anyone who receives or sends USDT outside an exchange's own system: P2P traders, OTC desks, merchants, and the fund checkers at crypto companies. It works on **BNB Smart Chain (BEP20)**, **Ethereum (ERC20)** and **Tron (TRC20)**.
 
-**Quick check** (anything you were handed):
-
-1. **Transaction**: paste only a chain and a tx hash. It judges each token by its contract address and says what looks wrong (fake "USDT", zero-value or dust poisoning, failed or unfinalized tx, lookalike addresses). A draggable, zoomable map shows who signed it, which contracts it used, where every token went, and for a fake token who created or owns the contract and who else received it.
-2. **Wallet address**: is this wallet being attacked (fake USDT, poisoning, dust, risky approvals, EIP-7702 delegation) or attacking others (dust sprinkling, zero-value campaigns, spreading a fake token)? A map shows who pays it, who it pays and who is attacking whom. "Analyze older history" reads further back each time.
-3. **Token address**: is it the real USDT for that chain, a fake that only calls itself USDT, or a different token? The map shows its creator or owner and where it was sent. The real BSC USDT is hardcoded (`0x55d398326f99059fF775485246999027B3197955`) and the check is an exact address match.
-
-**Detailed analysis** (your own funds):
-
-4. **Verify a payment**: the buyer says "I sent you 5,000 USDT, here is the hash". Is it real, final, sent to *my* address, and actually USDT?
-5. **Monitor a wallet**: follow an address (connect a browser wallet from the top bar, or paste one). Real USDT balance, recent transfers with anything odd marked, every new transfer checked automatically while the page is open, CSV export, optional notifications.
-6. **Before you send**: is the address I'm about to withdraw to a lookalike of one I use?
-7. **Saved addresses**: the addresses every check compares against to catch lookalikes.
-
-Every result links to the chain explorer (BscScan, Etherscan, Tronscan) so you can confirm it yourself.
-
-It never holds keys and never asks for a signature, a transaction or a spending approval. Connecting a wallet is optional and only reads which account is selected. It only reads public chain data. An FAQ section answers common questions.
+Paste a transaction hash, a wallet address or a token address. You get a plain answer first (a risk score, one sentence, what to do), a map of who sent what to whom, and a link to check it yourself on BscScan, Etherscan or Tronscan. Every technical detail is one click away.
 
 > It never says "safe". **VERIFIED** means one thing: canonical USDT reached your address in a final block, and two independent RPC providers agree on it. For deposits to Binance, the final truth is always your **Binance deposit history**.
 
@@ -34,6 +19,7 @@ It never holds keys and never asks for a signature, a transaction or a spending 
 
 Bookmark the real site. Clones of checker sites exist, and a clone that always says VERIFIED is itself an attack (F32d).
 
+- [What the website does](#what-the-website-does)
 - [How it works](#how-it-works)
 - [Attack vectors (Phase 1)](#attack-vectors)
 - [Chained attacks](#chained-attacks)
@@ -43,6 +29,137 @@ Bookmark the real site. Clones of checker sites exist, and a clone that always s
 - [Development](#development)
 - Threat matrix: [`docs/THREAT_MATRIX.md`](docs/THREAT_MATRIX.md)
 - Deploy: [`DEPLOY.md`](DEPLOY.md)
+
+---
+
+## What the website does
+
+### The problem it solves
+
+"Flash USDT" is not a technology. It is a scam. Anyone can create a token, call it "Tether USD", give it the symbol USDT and send it to you. Wallets and block explorers show the name the token chooses, so a worthless token looks exactly like a real payment: "+5,000 USDT", sometimes with the Tether logo. The scammer then asks you to release goods, ship an order, send crypto back, or pay a "fee" to unlock the balance. Related tricks include payment screenshots that were edited, real payments that went to someone else, transactions that failed or are not final, and addresses planted in your history that look almost like one you use (address poisoning).
+
+Real USDT is exactly one contract per chain. This website checks the contract address, never the name, and reads the chain itself, never a screenshot.
+
+### Layout
+
+The site is a dashboard with four sections in the left menu (a bar across the top on phones):
+
+| Section | What it is for |
+|---|---|
+| **Quick check** | Anything you were handed: a transaction hash, a wallet address or a token address. |
+| **Detailed analysis** | Your own funds: confirm a payment reached *your* address, follow a wallet live, check an address before you pay it, keep a list of your own addresses. |
+| **Attack vectors** | Every trick the tool defends against, each drawn as a diagram with a step-by-step story and a real-world incident. |
+| **FAQ** | Short answers in plain words. |
+
+The top bar has a **Simple / Advanced** switch and an optional **Connect wallet** button.
+
+- **Simple** (the default) shows the plain answer, the map and the explorer link. The technical report is folded under "Show full details".
+- **Advanced** opens the full report on every result and shows extra fields, such as the deal start time when verifying a payment. The checks themselves are the same in both views.
+
+The right column of Quick check always shows the **official USDT contract** for each chain (with a copy button), how to read a result, and three rules (never trust a screenshot or a token name; never copy an address from wallet history; the exchange's deposit history is the final word for exchange balances).
+
+### Every result looks the same
+
+1. **A risk dial and a level**: Low risk (green), Be careful (yellow) or High risk (red), with a score from 0 to 100.
+2. **One sentence** saying what happened, for example "Fake USDT: it calls itself USDT / Tether USD, but it is a different contract from the real one."
+3. **A few plain points**: who received real USDT and how much, which token is pretending to be USDT, zero or tiny transfers, "not final yet", or "the servers did not all agree".
+4. **What to do**: for example "Do not release goods or money", "Wait a minute and check again", or "Use Verify a payment with your own address".
+5. **"View on BscScan / Etherscan / Tronscan" links**. The links are built by the app from its own list of explorers, never from text you pasted.
+6. **A map** (see below).
+7. **Show full details**: the complete technical report (every check, every server's answer, every token and address).
+
+The summary is produced by fixed rules from the same data shown in the details. No AI service is involved and nothing is sent anywhere.
+
+### The map (whiteboard)
+
+Every result comes with a diagram on an endless dotted board:
+
+- **Boxes** are wallets, contracts, tokens and the transaction itself. Colours: red = attacker or fake token, yellow = someone being targeted, purple = the checked address or a contract's creator, green = the real USDT contract.
+- **Arrows** show what moved: green = real USDT, red = fake token, yellow dashes = dust or zero-value transfers, grey dashes = "signed" or "called", purple dots = "created".
+- **Drag** the board to move around, **scroll or pinch** to zoom, **drag a box** to tidy it, use the buttons to zoom, fit everything, or go full screen. Arrows bend around boxes so they never hide behind one.
+- **Tap a box** to see its full address, copy it, open it on the explorer, or run a check on it right here.
+
+### Quick check → Transaction
+
+Paste only the chain and a transaction hash. The site:
+
+- Finds the transaction on several independent public servers and compares their answers. If they disagree, it shows what each server said and which one to believe.
+- Checks the transaction succeeded and is final (a pending or just-mined payment can still disappear).
+- Lists every token that moved and judges each one **by its contract address**: real USDT, fake USDT (calls itself USDT but is a different contract), another ordinary token, or not a contract at all.
+- Flags zero-value and dust transfers, lookalike addresses and other signs of poisoning.
+- Shows the net real-USDT change for every address.
+- Draws the **transaction map**: who signed it, which contract it called, where every token went. For a fake token it also looks up **who created or owns the token contract** and **who else received the same fake token** (other targets), so you can see the whole campaign, not just your transfer.
+
+This answers "what did this transaction do?". It does not say the payment reached *you*; for that use Verify a payment.
+
+### Quick check → Wallet address
+
+Paste any address (yours, a buyer's, a "support agent's"). The site reads its recent history and answers two questions side by side:
+
+- **Is it being attacked?** Zero-value transfers "from" it that its owner did not sign, transfers from addresses that imitate ones it really uses, tiny dust payments from strangers, fake USDT sent to it, spending approvals that let some contract take its USDT (unlimited ones are high risk), an EIP-7702 delegation that hands the wallet's code to a contract, or (Tron) account permissions controlled by someone else.
+- **Is it attacking others?** Tiny USDT amounts sprinkled to many different addresses, zero-value transfers collected from many addresses (the trace a lookalike address leaves in its victims' histories), or a fake USDT token sent to several people.
+
+The **address map** shows who pays it, who it pays, and who is attacking whom. Lookalike addresses get a red dotted arrow to the real address they imitate.
+
+At first only recent history is read, so the answer is quick. **Analyze older history** reads the next window further back each time you press it and redraws everything. How far back is possible depends on the free public servers: about the last hour or two on BNB Chain, more on Ethereum, pages of 200 events on Tron. If the site has an explorer key configured, it also pages back through the explorer index.
+
+These are the patterns real campaigns leave on chain. They are strong hints, not a court verdict: an exchange paying many people can look similar.
+
+### Quick check → Token address
+
+Paste a token contract address. You get:
+
+- **REAL USDT**: it is exactly the official contract for that chain (decided by address alone, no network needed).
+- **FAKE USDT**: it calls itself USDT or Tether but is a different contract. The page shows it next to the real address with the differing characters highlighted.
+- **NOT USDT**: a different, ordinary token.
+- **NOT A CONTRACT**: a wallet address or nothing at all.
+
+For anything that is not the real USDT it also reports what the contract can do to holders (blocked sells / honeypot, mint, pause, blacklist, upgradeable code, balances that do not add up), and the **token map** shows who created or owns it, who is sending it, and who received it.
+
+### Detailed analysis → Verify a payment
+
+The one to use before releasing anything. Enter the chain, the hash the payer gave you, **your own receiving address**, and optionally the expected amount (and, in Advanced, when the deal started). You get one of four answers:
+
+| Verdict | Meaning |
+|---|---|
+| **VERIFIED** | Real USDT from the official contract reached your address in a final block, and at least two independent servers returned the identical answer. |
+| **FAKE** | It does not prove a real USDT payment to you: wrong token, wrong recipient, too little, failed transaction, or paid before the deal started. Do not release. |
+| **UNVERIFIED** | Not proven either way, usually because it is too early (not final) or the servers disagree. Wait and check again. |
+| **NOT RECEIVED** | Nothing is on this chain for that hash, or it is still pending. |
+
+It also checks that the same transaction was not already used for another deal in this browser, that the sender is not on Tether's blacklist (Ethereum, Tron), and lists any decoy tokens in the transaction. A **payment map** shows the real USDT arrows to you in green and any decoys in red.
+
+### Detailed analysis → Monitor a wallet
+
+Follow one address: connect a browser wallet from the top bar, or just paste an address. You see its real USDT balance and recent transfers, with fake-looking tokens, dust, zero-value transfers and lookalike addresses marked, and a "Needs a look" filter. While the page is open, **every new transfer is checked automatically** and an alert appears at the top (optionally a desktop notification). Click any transfer for the full analysis and map. You can also mark an address as trusted, check an address before you pay it, and export the history as CSV.
+
+### Detailed analysis → Before you send
+
+Paste the address you are about to send to. It is compared with your saved addresses and the addresses you really paid. If it looks almost the same but is different, you get **LOOKALIKE** with the differing characters highlighted. Exact matches say KNOWN; anything else says NEW so you confirm it from the original source. It also warns if the address is a contract or the USDT contract itself (tokens sent there are usually lost).
+
+### Detailed analysis → Saved addresses
+
+Your own addresses (for example your exchange deposit addresses), stored only in this browser. Every check compares against this list to catch lookalikes.
+
+### Attack vectors
+
+All 51 tricks this tool defends against, grouped (token identity, flash-USDT behaviours, transaction deception, address poisoning, approvals and account control, off-chain and infrastructure, other chains). Pick one from the list on the left and the diagram window on the right draws it: the attacker, the contracts they deploy, the victim, and which funds move where. Under the map: a numbered step-by-step story, how this tool catches it, and a **real-world case** with a link to the write-up (security firms, wallet makers or news sites). The most common one, a fake "Tether USD" token, opens first.
+
+### Connecting a wallet (optional)
+
+Connecting only asks your wallet one question: which account is selected (`eth_requestAccounts` / `eth_accounts`). The app refuses every other wallet request: it never asks for a signature, a transaction, a network switch or permission to spend tokens, and a test checks that no signing method appears anywhere in the source. You can always skip Connect and paste an address instead.
+
+### Privacy
+
+There are no accounts, no analytics and no keys. The browser talks directly to free public blockchain servers. Saved addresses, the view setting and accepted payments stay in this browser. Token names and other chain data are shown as text only, never run as code, and a strict Content Security Policy blocks inline scripts.
+
+### The Chrome extension
+
+The same app as a browser extension (see "Use it" above), plus: a right-click "Check with Flash Token Protector" on any selected hash or address, a warning when you paste an address that looks like one of your saved addresses, and badges next to transfers on BscScan-style explorer pages. Details: [`docs/EXTENSION.md`](docs/EXTENSION.md).
+
+### What it cannot do
+
+It cannot see bank or card chargebacks, a compromised device, or anything off-chain. It cannot stop a transaction you sign somewhere else. Free public servers only keep recent history, so wallet checks look at a limited window. It never says a payment is "safe", only what the chain shows. More in [Limits](#limits) and [Residual risk](#residual-risk).
 
 ---
 
