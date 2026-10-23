@@ -15,6 +15,7 @@ Paste a transaction hash, a wallet address or a token address. You get a plain a
 | **Website** | <https://flashguard-usdt.web.app> (Firebase Hosting; mirror: <https://flash-token-protector.pages.dev>, which MetaMask flags because it blocks all free `pages.dev` subdomains) |
 | **Chrome extension** | [Download the zip](https://github.com/atharva-khewle/flash-token-protector/releases/latest/download/flash-token-protector-extension.zip) → **unzip it** (right-click → Extract All) → `chrome://extensions` (Brave: `brave://extensions`) → turn on **Developer mode** → **Load unpacked** → pick the unzipped folder that contains `manifest.json`. Dragging the unzipped *folder* onto the page also works. Dragging the .zip itself is not reliable across browsers. Details and permissions: [`docs/EXTENSION.md`](docs/EXTENSION.md) |
 | **Try it on real chain data** | [`docs/TEST_TXS.md`](docs/TEST_TXS.md): real BSC transactions where a fake "USDT" token was sent (expected FAKE) and real USDT transfers (expected VERIFIED), ready to paste into the site. |
+| **Attack research** | [`docs/ATTACK_RESEARCH.md`](docs/ATTACK_RESEARCH.md): a field guide to all 51 attack vectors. For each: mechanism, what the victim sees, a flow diagram of who does what and which funds move where, the detection rule and its tests, a local-chain reproduction where one exists, and a cited real-world case. |
 | **Proof it works** | [`docs/PROOF.md`](docs/PROOF.md): 31 attack scenarios built with real transactions on a local chain, plus real-browser tests of the site and the extension. One command reruns them. |
 
 Bookmark the real site. Clones of checker sites exist, and a clone that always says VERIFIED is itself an attack (F32d).
@@ -27,6 +28,7 @@ Bookmark the real site. Clones of checker sites exist, and a clone that always s
 - [Defense layers (Phase 2)](#defense-layers)
 - [Limits](#limits)
 - [Development](#development)
+- Attack research (all 51 vectors, diagrams, real cases): [`docs/ATTACK_RESEARCH.md`](docs/ATTACK_RESEARCH.md)
 - Threat matrix: [`docs/THREAT_MATRIX.md`](docs/THREAT_MATRIX.md)
 - Deploy: [`DEPLOY.md`](DEPLOY.md)
 
@@ -142,6 +144,8 @@ Paste the address you are about to send to. It is compared with your saved addre
 Your own addresses (for example your exchange deposit addresses), stored only in this browser. Every check compares against this list to catch lookalikes.
 
 ### Attack vectors
+
+> The full write-up of every vector below, with a flow diagram, detection rule, tests and a cited real-world case, is in [`docs/ATTACK_RESEARCH.md`](docs/ATTACK_RESEARCH.md).
 
 All 51 tricks this tool defends against, grouped (token identity, flash-USDT behaviours, transaction deception, address poisoning, approvals and account control, off-chain and infrastructure, other chains). Pick one from the list on the left and the diagram window on the right draws it: the attacker, the contracts they deploy, the victim, and which funds move where. Under the map: a numbered step-by-step story, how this tool catches it, and a **real-world case** with a link to the write-up (security firms, wallet makers or news sites). The most common one, a fake "Tether USD" token, opens first.
 
