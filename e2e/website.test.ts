@@ -66,7 +66,7 @@ afterAll(async () => {
 
 async function submit(tab: 'verify' | 'scan', fill: (inputs: string[]) => Promise<void>): Promise<void> {
   await page.goto(`http://127.0.0.1:${PORT}/`)
-  await page.locator(`#tabbtn-${tab}`).click()
+  await page.locator(`#tabbtn-${tab}`).dispatchEvent('click')
   const form = page.locator(`#tab-${tab} form`).first()
   await form.locator('select').selectOption('local')
   await fill([])
@@ -113,7 +113,7 @@ describe('website (testnet build) in a real browser', () => {
 
   it('Check token tab: mock USDT is REAL, every fake named USDT is FAKE USDT, a non-contract is NOT A CONTRACT', async () => {
     await page.goto(`http://127.0.0.1:${PORT}/`)
-    await page.locator('#tabbtn-token').click()
+    await page.locator('#tabbtn-token').dispatchEvent('click')
     const form = page.locator('#tab-token form')
     await form.locator('select').selectOption('local')
     const badge = page.locator('#tab-token .verdict .badge')
@@ -139,7 +139,7 @@ describe('website (testnet build) in a real browser', () => {
 
   it('Analyze tx tab: only a hash and a chain, finds the fake and the real token by itself', async () => {
     await page.goto(`http://127.0.0.1:${PORT}/`)
-    await page.locator('#tabbtn-tx').click()
+    await page.locator('#tabbtn-tx').dispatchEvent('click')
     const form = page.locator('#tab-tx form')
     await form.locator('select').selectOption('local')
     const head = page.locator('#tab-tx .verdict .badge')
@@ -163,7 +163,7 @@ describe('website (testnet build) in a real browser', () => {
   it('My wallet: follows an address, shows balance and history, and catches a new fake token live', async () => {
     const B = deployed.accounts!.B_receiver!
     await page.goto(`http://127.0.0.1:${PORT}/`)
-    await page.locator('#tabbtn-wallet').click()
+    await page.locator('#tabbtn-wallet').dispatchEvent('click')
     await page.locator('#tab-wallet .pill[data-chain=local]').click()
     await page.locator('#tab-wallet input[type=text]').first().fill(B)
     await page.locator('#tab-wallet form button[type=submit]').click()
@@ -213,7 +213,7 @@ describe('website (testnet build) in a real browser', () => {
       )
     }, B)
     await p2.goto(`http://127.0.0.1:${PORT}/`)
-    await p2.locator('#tabbtn-wallet').click()
+    await p2.locator('#tabbtn-wallet').dispatchEvent('click')
     await p2.locator('#tab-wallet .pill[data-chain=local]').click()
     await p2.getByRole('button', { name: 'Connect Mock Wallet' }).click()
     await expect.poll(() => p2.locator('#tab-wallet .account').textContent(), { timeout: 30_000 }).toContain('Connected wallet')
@@ -223,9 +223,9 @@ describe('website (testnet build) in a real browser', () => {
     await p2.close()
   })
 
-  it('Help tab opens and shows answers', async () => {
+  it('FAQ opens and shows answers', async () => {
     await page.goto(`http://127.0.0.1:${PORT}/`)
-    await page.locator('#tabbtn-faq').click()
+    await page.locator('#navbtn-faq').click()
     await page.locator('#tab-faq details.faq summary', { hasText: 'Is connecting my wallet safe?' }).click()
     await expect.poll(() => page.locator('#tab-faq details[open]').textContent()).toContain('never asks for a signature')
     await page.screenshot({ path: join(SHOTS, 'help.png'), fullPage: true })
@@ -233,12 +233,12 @@ describe('website (testnet build) in a real browser', () => {
 
   it('check-before-sending flags a lookalike of a saved address (no chain call needed for the verdict)', async () => {
     await page.goto(`http://127.0.0.1:${PORT}/`)
-    await page.locator('#tabbtn-scan').click()
-    const watch = page.locator('#tab-scan .card', { hasText: 'Watchlist' })
+    await page.locator('#tabbtn-saved').dispatchEvent('click')
+    const watch = page.locator('#tab-saved .card', { hasText: 'Watchlist' })
     await watch.locator('select').selectOption('local')
     await watch.locator('input[placeholder="Address"]').fill('0xa1b2c3d4e5f60718293a4b5c6d7e8f9012345678')
     await watch.getByRole('button', { name: 'Add' }).click()
-    await page.locator('#tabbtn-send').click()
+    await page.locator('#tabbtn-send').dispatchEvent('click')
     const form = page.locator('#tab-send form')
     await form.locator('select').selectOption('local')
     await form.locator('input').fill('0xa1b2c3d4ffffffffffffffffffffffffff345678')

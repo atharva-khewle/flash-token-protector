@@ -104,6 +104,6 @@ function render(c: ChainKey, shown: string, hidden: number, r: TokenCheckOutput)
 
   const l = maybeLink(info.explorer.address(shown), info.explorer.name)
   if (l) wrap.appendChild(h('p', { class: 'muted' }, 'Open on ', l, ' (link built by this app; check the domain).'))
-  wrap.appendChild(note('This only identifies the token contract. To check a payment you received, use Verify tx with the transaction hash.', 'info'))
+  wrap.appendChild(note('This only identifies the token contract. To check a payment you received, use Detailed analysis → Verify a payment with the transaction hash.', 'info'))
   return wrap
 }

@@ -15,13 +15,47 @@ function items(): { group: string; list: Item[] }[] {
       group: 'Start here',
       list: [
         {
-          q: 'Which tab should I use?',
+          q: 'Where do I start?',
           a: [
-            'Someone says they paid you and gave a transaction hash: use Analyze tx (just the hash). For a final yes or no for your own address, use Verify tx.',
-            'You want to look at an address (yours or someone else\'s) for fake tokens, poisoning, risky approvals or account takeovers: use Analyze address.',
-            'You have a token address and want to know if it is the real USDT: use Check token.',
-            'You want to watch your own wallet and have every new transfer checked for you: use My wallet.',
-            'You are about to send money and want to be sure the address is right: use Check before sending.',
+            'Quick check is for anything you were handed. Transaction: someone says they paid you and gave a hash. Wallet address: is this wallet being attacked, or attacking others? Token address: is this token the real USDT?',
+            'Detailed analysis is for your own funds. Verify a payment gives a final yes or no that real USDT reached your address. Monitor a wallet follows an address live. Before you send catches lookalike addresses. Saved addresses is the list every check compares against.',
+          ],
+        },
+        {
+          q: 'What is the difference between Simple and Advanced?',
+          a: [
+            'Simple (the default) shows the plain answer, the map and the explorer link, with the technical details folded under "Show full details".',
+            'Advanced opens those details on every result and shows extra fields, such as the deal start time when verifying a payment. The checks are the same in both.',
+          ],
+        },
+        {
+          q: 'How do I read the map?',
+          a: [
+            'Each box is an address, a contract or the transaction itself. Arrows show what moved: green is real USDT, red is a fake token, yellow dashes are dust or zero-value transfers, grey dashes mean "signed" or "called", and dotted purple means "created".',
+            'Box colours: red is an attacker or a fake token, yellow is someone being targeted, purple is the checked address or a contract creator, green is the real USDT contract.',
+            'Drag the board to move around, scroll or pinch to zoom, and drag a box to tidy it. Tap a box to see the full address, copy it, open it on the explorer, or check it here.',
+          ],
+        },
+        {
+          q: 'How does it tell an attacker from a victim?',
+          a: [
+            'Being attacked: zero-value transfers "from" the address that its owner did not sign, transfers from addresses that imitate ones it really uses, tiny dust payments from strangers, or fake USDT sent to it.',
+            'Attacking others: tiny USDT amounts sprinkled to many different addresses, zero-value transfers collected from many addresses (the trace a lookalike address leaves), or a fake USDT token sent to several people.',
+            'These are the patterns real campaigns leave on chain. They are strong hints, not a court verdict: an exchange or payment processor can also send small amounts to many addresses.',
+          ],
+        },
+        {
+          q: 'Why does a wallet check only look at recent history? What does "Analyze older history" do?',
+          a: [
+            'Free public servers only return recent history: about the last hour or two on BNB Chain, more on Ethereum, and pages of 200 events on Tron. The first check reads one window so it is quick.',
+            'Each press of "Analyze older history" reads the next window back and redraws the map and the attacker/victim result with everything read so far. When the free servers will not go further, the button is replaced by a note. If the site owner has set an explorer key, it also pages back through the explorer index.',
+          ],
+        },
+        {
+          q: 'Who is the "creator" or "owner" of a fake token?',
+          a: [
+            'For a fake token the map tries to show who deployed the contract. On Tron the network records it. On Ethereum it is found from the chain history. On BNB Chain the free servers do not keep old history, so the map shows the address the contract names as its owner, which is usually the deployer.',
+            'The box that "signed" the transaction is the account that actually sent it, which can be different from the address the tokens appear to come from.',
           ],
         },
         {
@@ -51,11 +85,11 @@ function items(): { group: string; list: Item[] }[] {
         },
         {
           q: 'Why does a payment I just received say UNVERIFIED?',
-          a: ['A new transaction is not final yet. On BNB Smart Chain it takes about a minute. The My wallet tab re-checks new transfers for you until they are final.'],
+          a: ['A new transaction is not final yet. On BNB Smart Chain it takes about a minute. Monitor a wallet re-checks new transfers for you until they are final.'],
         },
         {
           q: 'It says NO RED FLAGS. Does that mean I was paid?',
-          a: ['No. Analyze tx only looks at what the transaction did. To know that you were paid, use Verify tx with your own address, or look at My wallet, which does that check for incoming transfers.'],
+          a: ['No. The transaction check only looks at what the transaction did. To know that you were paid, use Verify a payment with your own address, or Monitor a wallet, which does that check for incoming transfers.'],
         },
         {
           q: 'The app says VERIFIED but my exchange has not credited it.',
@@ -78,14 +112,14 @@ function items(): { group: string; list: Item[] }[] {
       ],
     },
     {
-      group: 'My wallet',
+      group: 'Connecting and monitoring a wallet',
       list: [
         {
           q: 'Is connecting my wallet safe?',
           a: [
             'Connecting is optional. This app only asks your wallet one question: which account is selected. It never asks for a signature, never sends a transaction and never asks for permission to spend your tokens.',
             'The code that talks to your wallet refuses every other request, and a test checks that no signing method appears anywhere in the source.',
-            'You can also skip connecting: paste any address into "Watch any address".',
+            'You can also skip connecting: paste any address into "Watch any address" under Monitor a wallet.',
           ],
         },
         {

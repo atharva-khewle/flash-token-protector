@@ -21,11 +21,11 @@ const fakeTok = {
 }
 
 describe('plain-language summaries', () => {
-  it('normal real USDT transfer: low risk, says who got it and to use Verify tx', () => {
+  it('normal real USDT transfer: low risk, says who got it and to use Verify a payment', () => {
     const p = plainTx(tx({ tokens: [realTok], net: [{ address: ME, value: 500n * one, formatted: '500' }] }))
     expect(p.tone).toBe('good')
     expect(p.points.join(' ')).toMatch(/500 USDT to 0x1111/)
-    expect(p.todo.join(' ')).toMatch(/Verify tx/)
+    expect(p.todo.join(' ')).toMatch(/Verify a payment/)
   })
 
   it('fake USDT only: high risk and tells you not to release anything', () => {

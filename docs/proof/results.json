@@ -418,12 +418,12 @@
       "pass": true,
       "outcome": {
         "txs": [
-          "0xd0937b976b381510eb9cd39b5b0f1c2d08f57f84b6d8aa026e7e686c375d555d"
+          "0x4028ce2ec35406ed898579986dcdbbaf0fc029de4dfd15009fc4877f681830f9"
         ],
         "observed": "FAKE; \"This is a block hash, not a transaction hash\"",
         "ui": {
           "tab": "verify",
-          "hash": "0xd0937b976b381510eb9cd39b5b0f1c2d08f57f84b6d8aa026e7e686c375d555d",
+          "hash": "0x4028ce2ec35406ed898579986dcdbbaf0fc029de4dfd15009fc4877f681830f9",
           "recipient": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
           "expect": "FAKE (block hash)"
         }

@@ -29,7 +29,7 @@ const HEAD_TEXT: Record<Headline, string> = {
   'FAILED TX': 'The transaction failed. Nothing moved.',
   'FAKE USDT FOUND': 'A token pretending to be USDT is in this transaction.',
   'PROBLEMS FOUND': 'Read the findings below.',
-  'NO RED FLAGS': 'No red flags in what this transaction did. This does not check that it paid you. Use Verify tx with your address for that.',
+  'NO RED FLAGS': 'No red flags in what this transaction did. This does not check that it paid you. Use Detailed analysis → Verify a payment with your address for that.',
 }
 const TOKEN_KIND: Record<TokenVerdict, string> = { 'REAL USDT': 'ok', 'FAKE USDT': 'bad', 'NOT USDT': 'warn', 'NOT A CONTRACT': 'bad', UNKNOWN: 'warn' }
 const LEVEL_CLASS: Record<Level, string> = { bad: 'risk-high', warn: 'risk-medium', info: 'risk-info', ok: 'risk-ok' }

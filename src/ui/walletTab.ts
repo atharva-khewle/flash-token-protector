@@ -262,7 +262,7 @@ export function walletTab(hooks: WalletHooks = {}): HTMLElement {
           { class: 'actions' },
           action('⧉', 'Copy address', (t) => copy(shown, t, 'Copy address')),
           action('↻', 'Refresh', () => void refresh()),
-          action('⛨', 'Analyze address', securityScan),
+          action('⛨', 'Check this wallet', securityScan),
           action('⤓', 'Export CSV', exportCsv),
           action('✕', a.via === 'wallet' ? 'Disconnect' : 'Stop', () => {
             end()

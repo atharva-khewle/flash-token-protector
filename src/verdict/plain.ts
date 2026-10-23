@@ -88,7 +88,7 @@ export function plainTx(r: TxReportOutput): Plain {
   if (real && receivers.length > 0) {
     const top = receivers.slice(0, 3).map((n) => `${formatUnits(n.value, usdt.decimals)} USDT to ${short(r.chain, n.address)}`)
     points.push(`Real USDT moved: ${top.join('; ')}${receivers.length > 3 ? `; and ${receivers.length - 3} more` : ''}.`)
-    todo.push('To confirm it paid you, use Verify tx with your own address.')
+    todo.push('To confirm it paid you, use Detailed analysis → Verify a payment with your own address.')
   } else if (real) {
     points.push('Real USDT moved, but nobody ended up with more than they started (it only passed through).')
   }
@@ -215,7 +215,7 @@ export function plainToken(r: TokenCheckOutput): Plain {
   const name = [r.symbol, r.name].filter(Boolean).join(' / ')
   switch (r.verdict) {
     case 'REAL USDT':
-      return { tone: 'good', risk: 0, title: 'This is the real USDT.', points: [`It is exactly the official USDT contract on ${CHAINS[r.chain].name}.`], todo: ['Still check that a payment went to your address (Verify tx).'] }
+      return { tone: 'good', risk: 0, title: 'This is the real USDT.', points: [`It is exactly the official USDT contract on ${CHAINS[r.chain].name}.`], todo: ['Still check that a payment went to your address (Detailed analysis → Verify a payment).'] }
     case 'FAKE USDT':
       return {
         tone: 'danger',
