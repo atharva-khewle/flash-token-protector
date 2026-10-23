@@ -89,13 +89,27 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
   // ---------- layout: columns left to right (top to bottom on a narrow board), empty columns dropped ----------
   const pos = new Map<string, { x: number; y: number }>()
   const cols = [...new Set(spec.nodes.map((n) => n.col))].sort((a, b) => a - b)
+  // A crowded column wraps into several, growing away from the middle of the board.
+  const PER = 8
   const layout = (vertical: boolean) => {
+    let shift = 0
+    const mid = (cols.length - 1) / 2
+    const spans = cols.map((c) => Math.ceil(spec.nodes.filter((n) => n.col === c).length / PER))
     cols.forEach((c, ci) => {
       const inCol = spec.nodes.filter((n) => n.col === c)
+      const wraps = spans[ci]!
+      const rows = Math.ceil(inCol.length / wraps)
+      const outward = ci < mid ? -1 : 1
+      const base = shift + (ci < mid ? wraps - 1 : 0)
       inCol.forEach((n, i) => {
-        const along = (i - (inCol.length - 1) / 2) * (vertical ? W + 26 : ROW_GAP)
-        pos.set(n.id, vertical ? { x: along, y: ci * ROW_GAP * 1.9 } : { x: ci * COL_GAP, y: along })
+        const sub = Math.floor(i / rows)
+        const r = i % rows
+        const inThis = Math.min(rows, inCol.length - sub * rows)
+        const along = (r - (inThis - 1) / 2) * (vertical ? W + 26 : ROW_GAP)
+        const across = base + outward * sub
+        pos.set(n.id, vertical ? { x: along, y: across * ROW_GAP * 1.9 } : { x: across * COL_GAP, y: along })
       })
+      shift += wraps
     })
   }
   layout(false)
@@ -380,7 +394,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
   const firstFit = () => {
     if (laidOut || board.clientWidth === 0) return
     laidOut = true
-    const widest = Math.max(...cols.map((c) => spec.nodes.filter((n) => n.col === c).length))
+    const widest = Math.max(...cols.map((c) => Math.min(PER, spec.nodes.filter((n) => n.col === c).length)))
     const vertical = board.clientWidth < 720 && widest <= Math.max(2, Math.floor(board.clientWidth / (W + 26)) + 1)
     layout(vertical && cols.length > 2)
     placeNodes()

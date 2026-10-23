@@ -81,7 +81,7 @@ export async function handleExplorer(req: Request, env: ExplorerEnv, now = Date.
     module: 'account',
     action: 'tokentx',
     address,
-    page: '1',
+    page: String(Math.min(10, Math.max(1, Number(url.searchParams.get('page')) || 1))),
     offset: '200',
     sort: 'desc',
     apikey: env.EXPLORER_API_KEY,

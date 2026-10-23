@@ -38,7 +38,7 @@ export interface ScanOutput {
   /** Every transfer looked at so far (all rounds). */
   transfers: TokenTransfer[]
   /** Where "Analyze more" continues. null = nothing older to fetch. */
-  cursor: { before: bigint | null; fingerprint: string | null; oldest: bigint | null; head: bigint | null } | null
+  cursor: { before: bigint | null; fingerprint: string | null; oldest: bigint | null; head: bigint | null; explorerPage?: number | null } | null
   rounds: number
 }
 
@@ -81,7 +81,7 @@ interface Round {
 }
 
 /** One window of canonical-USDT history. `before` continues an earlier scan further back. */
-async function scanEvm(chain: ChainKey, me: Hex, before: bigint | null, first: boolean, knownSpenders: Set<Hex>): Promise<Round> {
+async function scanEvm(chain: ChainKey, me: Hex, before: bigint | null, first: boolean, knownSpenders: Set<Hex>, explorerPage: number | null): Promise<Round> {
   const a = adapterFor(chain) as EvmAdapter
   const usdt = canonicalUsdt(chain)
   const coverage: string[] = []
@@ -95,7 +95,7 @@ async function scanEvm(chain: ChainKey, me: Hex, before: bigint | null, first: b
   let from = top
   let reached = top + 1n
   const maxBlocks = BigInt(CHAINS[chain].logWindow)
-  while (top - from < maxBlocks && from > 0n) {
+  while (before !== -1n && top - from < maxBlocks && from > 0n) {
     const lo = from >= chunk ? from - chunk + 1n : 0n
     try {
       const parts = await Promise.all([
@@ -111,7 +111,7 @@ async function scanEvm(chain: ChainKey, me: Hex, before: bigint | null, first: b
     }
   }
   const span = top - reached + 1n
-  if (span <= 0n) coverage.push('Canonical USDT history: public RPC refused log queries. Try again later.')
+  if (first && span <= 0n) coverage.push('Canonical USDT history: public RPC refused log queries. Try again later.')
 
   const transfers: TokenTransfer[] = []
   const spenders = new Set<Hex>()
@@ -123,13 +123,17 @@ async function scanEvm(chain: ChainKey, me: Hex, before: bigint | null, first: b
     }
   }
 
-  if (first) {
-    const ex = await a.listTokenTransfers(me)
+  // The explorer index (if this site has a key) goes much further back than free RPCs: page through it.
+  let nextPage: number | null = null
+  if (first || explorerPage) {
+    const page = explorerPage ?? 1
+    const ex = await a.listTokenTransfers(me, page)
     if (ex.available) {
       const seen = new Set(transfers.map(transferKey))
       for (const t of ex.value) if (!seen.has(transferKey(t))) transfers.push(t)
-      coverage.push(`All token transfers (incl. fake tokens): last ${ex.value.length} from the explorer index.`)
-    } else {
+      if (first) coverage.push('All token transfers (incl. fake tokens) from the explorer index, 200 per round.')
+      nextPage = ex.value.length >= 200 && page < 10 ? page + 1 : null
+    } else if (first) {
       coverage.push(`Fake-token transfers to you: not checked. ${ex.reason}`)
     }
   }
@@ -148,7 +152,7 @@ async function scanEvm(chain: ChainKey, me: Hex, before: bigint | null, first: b
     approvals: analyzeApprovals(chain, allowances),
     transfers,
     adapter: a,
-    cursor: { before: reached > 0n && span > 0n ? reached - 1n : null, fingerprint: null, oldest: span > 0n ? reached : null, head },
+    cursor: { before: reached > 0n && span > 0n ? reached - 1n : null, fingerprint: null, oldest: span > 0n ? reached : null, head, explorerPage: nextPage },
   }
 }
 
@@ -191,7 +195,10 @@ export async function runScan(chain: ChainKey, me: Hex, watchlist: Hex[], opts: 
   const prev = opts.prev && opts.prev.chain === chain && opts.prev.address === me ? opts.prev : null
   const known = new Set<Hex>(prev?.approvals.map((x) => x.spender) ?? [])
   const tron = CHAINS[chain].family === 'tron'
-  const r = tron ? await scanTron(me, prev?.cursor?.fingerprint ?? null, !prev, known) : await scanEvm(chain, me, prev?.cursor?.before ?? null, !prev, known)
+  // RPC windows continue from `before`; -1 means the free servers refused older blocks, so only the explorer pages on.
+  const r = tron
+    ? await scanTron(me, prev?.cursor?.fingerprint ?? null, !prev, known)
+    : await scanEvm(chain, me, prev ? (prev.cursor?.before ?? -1n) : null, !prev, known, prev?.cursor?.explorerPage ?? null)
 
   const seen = new Set((prev?.transfers ?? []).map(transferKey))
   const transfers = [...(prev?.transfers ?? []), ...r.transfers.filter((t) => !seen.has(transferKey(t)))]
@@ -203,7 +210,13 @@ export async function runScan(chain: ChainKey, me: Hex, watchlist: Hex[], opts: 
 
   const cursor = tron
     ? r.cursor!
-    : { before: r.cursor?.before ?? null, fingerprint: null, oldest: r.cursor?.oldest ?? prev?.cursor?.oldest ?? null, head: prev?.cursor?.head ?? r.cursor?.head ?? null }
+    : {
+        before: r.cursor?.before ?? null,
+        fingerprint: null,
+        oldest: r.cursor?.oldest ?? prev?.cursor?.oldest ?? null,
+        head: prev?.cursor?.head ?? r.cursor?.head ?? null,
+        explorerPage: r.cursor?.explorerPage ?? null,
+      }
 
   // First line: the window covered so far. Then the one-off notes from the first round.
   const window = tron
@@ -238,7 +251,7 @@ export async function runScan(chain: ChainKey, me: Hex, watchlist: Hex[], opts: 
     behavior: analyzeBehavior(chain, me, transfers, wallet),
     tokenRisks,
     transfers,
-    cursor: tron ? (cursor.fingerprint ? cursor : null) : cursor.before !== null ? cursor : null,
+    cursor: tron ? (cursor.fingerprint ? cursor : null) : cursor.before !== null || cursor.explorerPage ? cursor : null,
     rounds,
   }
 }

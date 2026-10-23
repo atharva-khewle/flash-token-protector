@@ -363,11 +363,12 @@ export class EvmAdapter implements ChainAdapter {
     }
   }
 
-  async listTokenTransfers(address: Hex): Promise<Maybe<TokenTransfer[]>> {
+  /** Newest first, 200 per page (page 1..10). */
+  async listTokenTransfers(address: Hex, page = 1): Promise<Maybe<TokenTransfer[]>> {
     if (this.info.unrestrictedLogs) return this.listFromNode(address)
     if (!this.explorerProxy) return { available: false, reason: 'No explorer proxy configured.' }
     try {
-      const url = `${this.explorerProxy}?chain=${this.chain}&address=${address}`
+      const url = `${this.explorerProxy}?chain=${this.chain}&address=${address}${page > 1 ? `&page=${page}` : ''}`
       const body = (await fetchJson(url)) as
         | { available: true; items: { hash: string; blockNumber: string; timeStamp: string; contractAddress: string; tokenName: string; tokenSymbol: string; tokenDecimal: string; from: string; to: string; value: string }[] }
         | { available: false; reason: string }

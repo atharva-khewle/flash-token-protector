@@ -88,5 +88,5 @@ export interface ChainAdapter {
   /** True if the hash is a block hash rather than a tx hash. */
   isBlockHash(hash: string): Promise<boolean>
   /** All token transfers touching an address, including fake tokens. Needs an indexer. */
-  listTokenTransfers(address: Hex): Promise<Maybe<TokenTransfer[]>>
+  listTokenTransfers(address: Hex, page?: number): Promise<Maybe<TokenTransfer[]>>
 }

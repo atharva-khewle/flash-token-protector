@@ -16,6 +16,14 @@ import type { BoardSpec, EdgeKind, GEdge, GNode, NodeKind } from './graph'
 
 const short = (s: string) => (s.length > 14 ? `${s.slice(0, 6)}…${s.slice(-4)}` : s)
 
+/** Short amount for an arrow label: 1,234.56 / 2.4M / 0.000012. The full value is in the details. */
+function amount(v: bigint, decimals: number): string {
+  const n = Number(formatUnits(v, decimals))
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
+  return n.toLocaleString('en-US', { maximumFractionDigits: n > 0 && n < 1 ? 6 : 2 })
+}
+
 // When one address plays several parts, the most alarming one colours the box.
 const RANK: NodeKind[] = ['attacker', 'fake', 'creator', 'me', 'victim', 'real', 'contract', 'wallet', 'unknown']
 
@@ -84,7 +92,7 @@ function realEdge(chain: ChainKey, v: bigint): { kind: EdgeKind; label: string }
   const usdt = canonicalUsdt(chain)
   const one = 10n ** BigInt(usdt.decimals)
   if (v === 0n) return { kind: 'zero', label: '0 USDT (zero-value)' }
-  const label = `${formatUnits(v, usdt.decimals)} USDT`
+  const label = `${amount(v, usdt.decimals)} USDT`
   return v < one / 100n ? { kind: 'dust', label: `${label} (dust)` } : { kind: 'real', label }
 }
 
@@ -245,25 +253,22 @@ export function scanDiagram(s: ScanOutput): BoardSpec {
   const shown = new Set(parties.slice(0, MAX_PARTIES))
   const dirs = (cp: Hex) => new Set([...agg.values()].filter((a) => a.cp === cp).map((a) => a.dir))
 
-  const both = parties.filter((cp) => shown.has(cp) && dirs(cp).size === 2)
-  const half = Math.floor(both.length / 2)
-  const place = (cp: Hex) => {
+  // Left: pays this address (and two-way partners). Right: paid by this address.
+  const meId = b.addr(me, { kind: role === 'attacker' ? 'attacker' : 'me', col: 1, badge: meBadge, title: 'Checked address', info: [...s.behavior.victim, ...s.behavior.attacker] })
+  for (const cp of parties) {
+    if (!shown.has(cp)) continue
     const d = dirs(cp)
     const kind: NodeKind = attackers.has(cp) ? 'attacker' : targets.has(cp) ? 'victim' : 'wallet'
     const badge = attackers.has(cp) ? 'ATTACKS THIS ADDRESS' : targets.has(cp) ? 'TARGETED BY THIS ADDRESS' : undefined
-    b.addr(cp, { kind, col: d.size === 2 ? 1 : d.has('in') ? 0 : 2, badge, title: d.size === 2 ? 'Sends and receives' : d.has('in') ? 'Sent to it' : 'Received from it' })
+    b.addr(cp, { kind, col: d.has('in') ? 0 : 2, badge, title: d.size === 2 ? 'Pays it and is paid' : d.has('in') ? 'Pays this address' : 'Paid by this address' })
   }
-  both.slice(0, half).forEach(place)
-  const meId = b.addr(me, { kind: role === 'attacker' ? 'attacker' : 'me', col: 1, badge: meBadge, title: 'Checked address', info: [...s.behavior.victim, ...s.behavior.attacker] })
-  both.slice(half).forEach(place)
-  for (const cp of parties) if (shown.has(cp) && dirs(cp).size < 2) place(cp)
 
   for (const a of agg.values()) {
     if (!shown.has(a.cp)) continue
     const cpId = displayAddress(s.chain, a.cp).toLowerCase()
     const times = a.n > 1 ? `${a.n}× ` : ''
     const label =
-      a.kind === 'real' || a.kind === 'dust' ? `${times}${formatUnits(a.sum, usdt.decimals)} USDT` : a.kind === 'zero' ? `${times}zero-value` : a.kind === 'fake' ? `${times}fake “${a.sym}”` : `${times}${a.sym}`
+      a.kind === 'real' || a.kind === 'dust' ? `${times}${amount(a.sum, usdt.decimals)} USDT` : a.kind === 'zero' ? `${times}zero-value` : a.kind === 'fake' ? `${times}fake “${a.sym}”` : `${times}${a.sym}`
     if (a.dir === 'in') b.edge(cpId, meId, a.kind, label)
     else b.edge(meId, cpId, a.kind, label)
   }
