@@ -1,86 +1,260 @@
 import { hydrateFromExtension } from '../lib/storage'
 import { familyOfAddress } from '../lib/input'
+import { canonicalUsdt } from '../registry/usdt'
+import { CHAINS, type ChainKey } from '../registry/chains'
 import { h, link } from './dom'
+import { connectButton } from './connect'
 import { faqTab } from './faqTab'
+import { applyMode, getMode, setMode, type Mode } from './mode'
+import { savedTab } from './savedTab'
 import { scanTab } from './scanTab'
 import { sendTab } from './sendTab'
+import { syncDetails } from './summary'
 import { tokenTab } from './tokenTab'
 import { txTab } from './txTab'
 import { verifyTab } from './verifyTab'
-import { walletTab } from './walletTab'
+import { walletTab, type WalletHooks } from './walletTab'
 import './style.css'
 import './soft.css'
+import './dashboard.css'
 
 const REPO = 'https://github.com/atharva-khewle/flash-token-protector'
 
-const TABS = [
-  { id: 'tx', label: 'Analyze tx', make: () => txTab() },
-  { id: 'scan', label: 'Analyze address', make: () => scanTab(() => undefined) },
-  { id: 'token', label: 'Check token', make: () => tokenTab() },
-  { id: 'verify', label: 'Verify tx', make: () => verifyTab() },
-  { id: 'wallet', label: 'My wallet', make: () => walletTab() },
-  { id: 'send', label: 'Check before sending', make: () => sendTab() },
-  { id: 'faq', label: 'Help', make: () => faqTab() },
-] as const
+interface Leaf {
+  id: string
+  label: string
+  hint: string
+  make: () => HTMLElement
+}
+interface Section {
+  id: string
+  label: string
+  icon: string
+  title: string
+  desc: string
+  leaves: Leaf[]
+}
 
-/** Extension popup only: the same app in a full browser tab, which has room for history and reports. */
+const wallet: WalletHooks = {}
+
+// Three sections. The leaf ids (tab-tx, tabbtn-tx, ...) are what tests and the extension's
+// right-click menu address, so they stay stable whatever the layout.
+const SECTIONS: Section[] = [
+  {
+    id: 'quick',
+    label: 'Quick check',
+    icon: '⚡',
+    title: 'Quick check',
+    desc: 'Paste what you were given. You get a plain answer first; the technical details are one click away.',
+    leaves: [
+      { id: 'tx', label: 'Transaction', hint: 'A tx hash someone says paid you', make: () => txTab() },
+      { id: 'scan', label: 'Wallet address', hint: 'Is this wallet attacked, or attacking?', make: () => scanTab() },
+      { id: 'token', label: 'Token address', hint: 'Is this token the real USDT?', make: () => tokenTab() },
+    ],
+  },
+  {
+    id: 'detail',
+    label: 'Detailed analysis',
+    icon: '◎',
+    title: 'Detailed analysis',
+    desc: 'Confirm a payment reached your own address, follow a wallet live, and check an address before you pay it.',
+    leaves: [
+      { id: 'verify', label: 'Verify a payment', hint: 'Did real USDT reach my address?', make: () => verifyTab() },
+      { id: 'wallet', label: 'Monitor a wallet', hint: 'Balance, history, live alerts', make: () => walletTab(wallet) },
+      { id: 'send', label: 'Before you send', hint: 'Is this address a lookalike?', make: () => sendTab() },
+      { id: 'saved', label: 'Saved addresses', hint: 'Your own addresses', make: () => savedTab() },
+    ],
+  },
+  {
+    id: 'faq',
+    label: 'FAQ',
+    icon: '?',
+    title: 'Questions and answers',
+    desc: 'Short answers, in plain words.',
+    leaves: [{ id: 'faq', label: 'FAQ', hint: '', make: () => faqTab() }],
+  },
+]
+
+const isExtensionPage = () => typeof chrome !== 'undefined' && !!chrome.runtime?.id
+
+/** Extension popup only: the same app in a full browser tab, which has room for history and diagrams. */
 function openInTab(): HTMLElement | null {
-  if (typeof chrome === 'undefined' || !chrome.runtime?.id || new URLSearchParams(location.search).has('tab')) return null
-  const b = h('button', { type: 'button' }, 'Open in a tab')
+  if (!isExtensionPage() || new URLSearchParams(location.search).has('tab')) return null
+  const b = h('button', { type: 'button', class: 'ghost' }, 'Open in a tab')
   b.addEventListener('click', () => {
     window.open(chrome.runtime.getURL('popup.html?tab=1'), '_blank', 'noopener')
   })
   return b
 }
 
-function mount(root: HTMLElement, banner: HTMLElement | null): void {
-  const panels = TABS.map((t) => {
-    const p = t.make()
-    p.hidden = true
-    return p
-  })
-  const buttons = TABS.map((t, i) => {
-    const b = h('button', { type: 'button', role: 'tab', class: 'tabbtn', id: `tabbtn-${t.id}` }, t.label)
-    b.addEventListener('click', () => select(i))
+function modeSwitch(): HTMLElement {
+  const wrap = h('div', { class: 'modeswitch', role: 'group', 'aria-label': 'View' })
+  const opts: { m: Mode; label: string; title: string }[] = [
+    { m: 'simple', label: 'Simple', title: 'Plain answers, details folded' },
+    { m: 'advanced', label: 'Advanced', title: 'Show every detail and extra fields' },
+  ]
+  const btns = opts.map((o) => {
+    const b = h('button', { type: 'button', class: 'modebtn', 'data-mode': o.m, title: o.title, 'aria-pressed': String(getMode() === o.m) }, o.label)
+    b.addEventListener('click', () => {
+      setMode(o.m)
+      for (const x of btns) x.setAttribute('aria-pressed', String(x.dataset.mode === o.m))
+      syncDetails(o.m === 'advanced')
+    })
     return b
   })
-  const select = (i: number) => {
-    panels.forEach((p, j) => (p.hidden = i !== j))
-    buttons.forEach((b, j) => b.setAttribute('aria-selected', String(i === j)))
+  wrap.append(...btns)
+  return wrap
+}
+
+function officialCard(): HTMLElement {
+  const rows = (['bsc', 'eth', 'tron'] as ChainKey[]).map((k) => {
+    const a = canonicalUsdt(k).address
+    const copy = h('button', { type: 'button', class: 'link small' }, 'Copy')
+    copy.addEventListener('click', () => {
+      try {
+        void navigator.clipboard.writeText(a).then(() => (copy.textContent = 'Copied'))
+      } catch {
+        /* clipboard optional */
+      }
+    })
+    return h('li', {}, h('div', { class: 'offname' }, h('strong', {}, CHAINS[k].name), copy), h('code', { class: 'addr' }, a))
+  })
+  return h(
+    'div',
+    { class: 'card side' },
+    h('h3', { class: 'flush' }, 'Official USDT contracts'),
+    h('p', { class: 'muted small' }, 'Real USDT is only these addresses. A token with any other address is not USDT, whatever its name says.'),
+    h('ul', { class: 'official' }, ...rows),
+  )
+}
+
+function legendCard(): HTMLElement {
+  const row = (tone: string, label: string, text: string) => h('li', {}, h('span', { class: `lg lg-${tone}`, 'aria-hidden': 'true' }), h('div', {}, h('strong', {}, label), h('div', { class: 'muted small' }, text)))
+  return h(
+    'div',
+    { class: 'card side' },
+    h('h3', { class: 'flush' }, 'How to read a result'),
+    h(
+      'ul',
+      { class: 'legend' },
+      row('good', 'Low risk', 'Nothing worrying found. Still confirm the payment reached your own address.'),
+      row('caution', 'Be careful', 'Something is unclear or not final yet. Wait and check again.'),
+      row('danger', 'High risk', 'Fake token, failed or missing payment. Do not release funds.'),
+    ),
+  )
+}
+
+function rulesCard(): HTMLElement {
+  return h(
+    'div',
+    { class: 'card side' },
+    h('h3', { class: 'flush' }, 'Three rules'),
+    h(
+      'ol',
+      { class: 'rules' },
+      h('li', {}, 'Never trust a screenshot or a token name. Check the hash here.'),
+      h('li', {}, 'Never copy an address from wallet history. Lookalikes are planted there.'),
+      h('li', {}, 'The exchange deposit history is the final word for exchange balances.'),
+    ),
+  )
+}
+
+function mount(root: HTMLElement, banner: HTMLElement | null): void {
+  applyMode()
+  const panels = new Map<string, HTMLElement>()
+  const subBtns = new Map<string, HTMLButtonElement>()
+  const navBtns = new Map<string, HTMLButtonElement>()
+  const sectionEls = new Map<string, HTMLElement>()
+  const lastLeaf = new Map<string, string>()
+
+  const select = (leafId: string) => {
+    const sec = SECTIONS.find((s) => s.leaves.some((l) => l.id === leafId)) ?? SECTIONS[0]!
+    for (const [id, el] of sectionEls) el.hidden = id !== sec.id
+    for (const [id, b] of navBtns) b.setAttribute('aria-current', id === sec.id ? 'page' : 'false')
+    for (const l of sec.leaves) {
+      panels.get(l.id)!.hidden = l.id !== leafId
+      subBtns.get(l.id)?.setAttribute('aria-selected', String(l.id === leafId))
+    }
+    lastLeaf.set(sec.id, leafId)
     try {
-      sessionStorage.setItem('ftp.tab', String(i))
+      sessionStorage.setItem('ftp.leaf', leafId)
     } catch {
       /* optional */
     }
   }
 
+  const nav = h('nav', { class: 'sidenav', 'aria-label': 'Sections' })
+  const content = h('div', { class: 'content' })
+  for (const s of SECTIONS) {
+    const nb = h('button', { type: 'button', class: 'navbtn', id: `navbtn-${s.id}` }, h('span', { class: 'navico', 'aria-hidden': 'true' }, s.icon), h('span', {}, s.label))
+    nb.addEventListener('click', () => select(lastLeaf.get(s.id) ?? s.leaves[0]!.id))
+    navBtns.set(s.id, nb)
+    nav.appendChild(nb)
+
+    const leafPanels = s.leaves.map((l) => {
+      const p = l.make()
+      panels.set(l.id, p)
+      return p
+    })
+    const subnav =
+      s.leaves.length > 1
+        ? h(
+            'div',
+            { class: 'subtabs', role: 'tablist', 'aria-label': s.label },
+            ...s.leaves.map((l) => {
+              const b = h('button', { type: 'button', role: 'tab', class: 'subtab', id: `tabbtn-${l.id}` }, h('span', { class: 'sublabel' }, l.label), h('span', { class: 'subhint' }, l.hint))
+              b.addEventListener('click', () => select(l.id))
+              subBtns.set(l.id, b)
+              return b
+            }),
+          )
+        : null
+    const main = h('div', { class: 'sectionmain' }, h('div', { class: 'card workcard' }, subnav, ...leafPanels))
+    const aside = s.id === 'quick' ? h('aside', { class: 'sidecol' }, officialCard(), legendCard(), rulesCard()) : null
+    const el = h(
+      'section',
+      { class: 'dsection', id: `section-${s.id}` },
+      h('div', { class: 'sectionhead' }, h('h2', {}, s.title), h('p', { class: 'muted' }, s.desc)),
+      h('div', { class: aside ? 'sectiongrid' : 'sectionsolo' }, main, aside),
+    )
+    sectionEls.set(s.id, el)
+    content.appendChild(el)
+  }
+
+  const trust = h(
+    'div',
+    { class: 'sidetrust' },
+    h('div', { class: 'small' }, h('strong', {}, 'Read-only')),
+    h('div', { class: 'muted small' }, 'No keys, no signatures, no accounts. Connecting a wallet only reads which address is selected.'),
+    h('div', { class: 'muted small domain' }, 'You are on ', h('strong', {}, location.host || 'local file'), '. Bookmark it.'),
+  )
+
   root.append(
     ...(banner ? [banner] : []),
     h(
       'header',
-      { class: 'top' },
-      h('div', { class: 'toprow' }, h('h1', {}, 'Flash Token Protector'), openInTab()),
-      h('p', { class: 'tagline' }, 'Is this USDT real? Read-only checks against the chain. No keys, no signatures. Connecting a wallet is optional.'),
-      h('p', { class: 'domain' }, 'You are on ', h('strong', {}, location.host || 'local file'), '. Bookmark it. Clones of checker sites exist.'),
+      { class: 'topbar' },
+      h('div', { class: 'brand' }, h('span', { class: 'logo', 'aria-hidden': 'true' }), h('div', {}, h('h1', {}, 'Flash Token Protector'), h('div', { class: 'muted small tagline' }, 'Fund check for USDT on BSC, Ethereum and Tron'))),
+      h('div', { class: 'topactions' }, modeSwitch(), openInTab(), isExtensionPage() ? null : connectButton(wallet, () => select('wallet'))),
     ),
-    h('nav', { class: 'tabs', role: 'tablist' }, ...buttons),
-    ...panels,
+    h('div', { class: 'shell' }, h('div', { class: 'sidebar' }, nav, trust), content),
     h(
       'footer',
       { class: 'foot' },
       h('p', {}, 'This tool never says "safe". VERIFIED means: canonical USDT reached your address in a final block, as reported by two independent RPC providers.'),
-      h('p', {}, 'Connecting a wallet is optional and read-only: the app only asks which account is selected, never for a signature, a transaction or a spending approval.'),
       h('p', {}, 'It cannot see fiat chargebacks, a compromised device, or anything off-chain. Never share a seed phrase. Nobody legitimate needs it.'),
       h('p', {}, link(REPO, 'Source code and test evidence'), ' · ', link(`${REPO}/releases/latest`, 'Chrome extension'), ' · ', link(`${REPO}/blob/main/docs/PROOF.md`, 'Proof of work')),
     ),
   )
-  let start = 0
+
+  let start = 'tx'
   try {
-    start = Number(sessionStorage.getItem('ftp.tab') ?? 0) || 0
+    const saved = sessionStorage.getItem('ftp.leaf')
+    if (saved && panels.has(saved)) start = saved
   } catch {
     /* optional */
   }
-  select(Math.min(Math.max(start, 0), TABS.length - 1))
+  select(start)
 }
 
 /** Right-click "Check with Flash Token Protector" opens popup.html?q=<selection>. */

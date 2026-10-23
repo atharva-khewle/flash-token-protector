@@ -19,6 +19,8 @@ export const VERDICT_TEXT: Record<VerifyOutput['verdict'], string> = {
   'NOT RECEIVED': 'Nothing has arrived on-chain. A pending or unknown tx is not a payment.',
 }
 
+const adv = (el: HTMLElement) => (el.classList.add('adv'), el)
+
 export function verifyTab(): HTMLElement {
   const chain = chainSelect('bsc')
   const hash = h('input', { type: 'text', placeholder: '0x… (BSC/ETH) or 64 hex (Tron)', autocomplete: 'off', spellcheck: 'false' })
@@ -35,7 +37,7 @@ export function verifyTab(): HTMLElement {
     field('Chain', chain, 'Binance P2P on BEP20 = BNB Smart Chain.'),
     field('Transaction hash', hash),
     field('Your address (expected recipient)', recipient, 'Required for a VERIFIED verdict. A real payment to someone else looks the same.'),
-    h('div', { class: 'row' }, field('Expected amount (USDT)', amount), field('Deal started at (optional)', notBefore, 'Payments mined before this are rejected.')),
+    h('div', { class: 'row' }, field('Expected amount (USDT)', amount), adv(field('Deal started at (optional)', notBefore, 'Payments mined before this are rejected.'))),
     err,
     btn,
   )

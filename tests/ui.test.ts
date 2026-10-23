@@ -9,17 +9,31 @@ beforeAll(async () => {
 })
 
 describe('UI', () => {
-  it('renders seven tabs and shows the analyze tab first', () => {
-    const tabs = [...document.querySelectorAll('[role=tab]')].map((b) => b.textContent)
-    expect(tabs).toEqual(['Analyze tx', 'Analyze address', 'Check token', 'Verify tx', 'My wallet', 'Check before sending', 'Help'])
+  it('renders three sections with their sub tabs and opens on the quick transaction check', () => {
+    const nav = [...document.querySelectorAll('.navbtn')].map((b) => b.textContent)
+    expect(nav).toEqual(['⚡Quick check', '◎Detailed analysis', '?FAQ'])
+    const tabs = [...document.querySelectorAll('[role=tab] .sublabel')].map((b) => b.textContent)
+    expect(tabs).toEqual(['Transaction', 'Wallet address', 'Token address', 'Verify a payment', 'Monitor a wallet', 'Before you send', 'Saved addresses'])
     expect((document.getElementById('tab-tx') as HTMLElement).hidden).toBe(false)
     expect((document.getElementById('tab-scan') as HTMLElement).hidden).toBe(true)
+    expect((document.getElementById('section-detail') as HTMLElement).hidden).toBe(true)
   })
 
-  it('switches tabs', () => {
+  it('switches tabs and sections', () => {
     ;(document.getElementById('tabbtn-send') as HTMLButtonElement).click()
     expect((document.getElementById('tab-send') as HTMLElement).hidden).toBe(false)
+    expect((document.getElementById('section-quick') as HTMLElement).hidden).toBe(true)
+    ;(document.getElementById('navbtn-faq') as HTMLButtonElement).click()
+    expect((document.getElementById('section-faq') as HTMLElement).hidden).toBe(false)
     ;(document.getElementById('tabbtn-tx') as HTMLButtonElement).click()
+    expect((document.getElementById('section-quick') as HTMLElement).hidden).toBe(false)
+  })
+
+  it('starts in the simple view and can switch to advanced', () => {
+    expect(document.documentElement.dataset.mode).toBe('simple')
+    ;(document.querySelector('.modebtn[data-mode=advanced]') as HTMLButtonElement).click()
+    expect(document.documentElement.dataset.mode).toBe('advanced')
+    ;(document.querySelector('.modebtn[data-mode=simple]') as HTMLButtonElement).click()
   })
 
   it('analyze tab refuses a malformed hash', () => {
@@ -38,7 +52,7 @@ describe('UI', () => {
   })
 
   it('adds an address to the watchlist (stored locally, checksummed)', () => {
-    const scan = document.getElementById('tab-scan')!
+    const scan = document.getElementById('tab-saved')!
     const [wa] = [...scan.querySelectorAll('.card input')].filter((i) => (i as HTMLInputElement).placeholder === 'Address') as HTMLInputElement[]
     wa!.value = '0xa1b2c3d4e5f60718293a4b5c6d7e8f9012345678'
     const add = [...scan.querySelectorAll('button')].find((b) => b.textContent === 'Add')!

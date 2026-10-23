@@ -3,6 +3,7 @@
 
 import type { Plain } from '../verdict/plain'
 import { h } from './dom'
+import { getMode } from './mode'
 
 const ICON = { good: '✓', caution: '!', danger: '✕' } as const
 const LEVEL = { good: 'Low risk', caution: 'Be careful', danger: 'High risk' } as const
@@ -14,12 +15,8 @@ export function summaryCard(p: Plain, details: HTMLElement): HTMLElement {
 
   const toggle = h('button', { type: 'button', class: 'detailsbtn', 'aria-expanded': 'false' }, 'Show full details')
   const holder = h('div', { class: 'fulldetails' }, details)
-  holder.hidden = true
-  toggle.addEventListener('click', () => {
-    holder.hidden = !holder.hidden
-    toggle.setAttribute('aria-expanded', String(!holder.hidden))
-    toggle.textContent = holder.hidden ? 'Show full details' : 'Hide details'
-  })
+  toggle.addEventListener('click', () => setOpen(toggle, holder, holder.hidden))
+  setOpen(toggle, holder, getMode() === 'advanced')
 
   return h(
     'div',
@@ -39,4 +36,19 @@ export function summaryCard(p: Plain, details: HTMLElement): HTMLElement {
     ),
     holder,
   )
+}
+
+function setOpen(toggle: HTMLElement, holder: HTMLElement, open: boolean): void {
+  holder.hidden = !open
+  toggle.setAttribute('aria-expanded', String(open))
+  toggle.textContent = open ? 'Hide details' : 'Show full details'
+}
+
+/** Switching view opens or folds the details of the results already on the page. */
+export function syncDetails(open: boolean): void {
+  for (const w of document.querySelectorAll('.resultwrap')) {
+    const t = w.querySelector<HTMLElement>(':scope > .plain .detailsbtn')
+    const d = w.querySelector<HTMLElement>(':scope > .fulldetails')
+    if (t && d) setOpen(t, d, open)
+  }
 }

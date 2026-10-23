@@ -72,7 +72,15 @@ function avatar(address: string): HTMLElement {
   return el
 }
 
-export function walletTab(): HTMLElement {
+/** Lets the top bar's Connect button drive this panel and show which address is followed. */
+export interface WalletHooks {
+  connect?: (w: DiscoveredWallet) => Promise<void>
+  disconnect?: () => void
+  current?: () => { chain: ChainKey; address: Hex; via: 'wallet' | 'watch' } | null
+  onAccount?: () => void
+}
+
+export function walletTab(hooks: WalletHooks = {}): HTMLElement {
   let chainSel: ChainKey = 'bsc'
   let acct: { chain: ChainKey; address: Hex; via: 'wallet' | 'watch' } | null = null
   let stop: (() => void) | null = null
@@ -523,6 +531,7 @@ export function walletTab(): HTMLElement {
     clear(detail)
     clear(alerts)
     clear(payCheck)
+    hooks.onAccount?.()
   }
 
   async function begin(c: ChainKey, address: Hex, via: 'wallet' | 'watch', wallet?: DiscoveredWallet): Promise<void> {
@@ -531,6 +540,7 @@ export function walletTab(): HTMLElement {
     const mine = session
     acct = { chain: c, address, via }
     setAccount({ chain: c, address, via })
+    hooks.onAccount?.()
     renderPills()
     renderHero()
     renderAccount()
@@ -619,6 +629,17 @@ export function walletTab(): HTMLElement {
       }
       walletBox.appendChild(h('p', { class: 'muted small' }, 'Optional. Connecting only reads which account is selected. This app never asks you to sign or send anything.'))
     })
+  }
+
+  hooks.current = () => acct
+  hooks.connect = async (w) => {
+    const c: ChainKey = CHAINS[chainSel].family === 'evm' ? chainSel : 'bsc'
+    await begin(c, await connectWallet(w), 'wallet', w)
+  }
+  hooks.disconnect = () => {
+    end()
+    setAccount(null)
+    renderHero()
   }
 
   renderPills()

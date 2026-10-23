@@ -1,7 +1,7 @@
 import { CHAINS, type ChainKey } from '../registry/chains'
 import { parseAddress } from '../lib/input'
 import { displayAddress } from '../lib/address'
-import { addWatch, getWatchlist, removeWatch } from '../lib/storage'
+import { getWatchlist } from '../lib/storage'
 import { runScan, type ScanOutput } from '../services/scan'
 import type { Hex } from '../chains/types'
 import { clear, field, h, maybeLink } from './dom'
@@ -9,48 +9,12 @@ import { summaryCard } from './summary'
 import { plainScan } from '../verdict/plain'
 import { addr, badge, busy, chainSelect, diffAddress, note } from './common'
 
-export function scanTab(onWatchChange: () => void): HTMLElement {
+export function scanTab(): HTMLElement {
   const chain = chainSelect('bsc')
   const address = h('input', { type: 'text', placeholder: 'Address to analyze', autocomplete: 'off', spellcheck: 'false' })
   const btn = h('button', { type: 'submit', class: 'primary' }, 'Analyze address')
   const out = h('div', { class: 'result', 'aria-live': 'polite' })
   const err = h('p', { class: 'error', role: 'alert' })
-  const watchBox = h('div', { class: 'card' })
-
-  const renderWatch = () => {
-    clear(watchBox)
-    watchBox.appendChild(h('h3', {}, 'Watchlist (your own addresses, incl. your Binance deposit addresses)'))
-    watchBox.appendChild(h('p', { class: 'muted small' }, 'Stored only in this browser. Used to spot lookalikes.'))
-    const label = h('input', { type: 'text', placeholder: 'Label (e.g. Binance BEP20 deposit)' })
-    const wa = h('input', { type: 'text', placeholder: 'Address', autocomplete: 'off', spellcheck: 'false' })
-    const wc = chainSelect(chain.value as ChainKey)
-    const add = h('button', { type: 'button' }, 'Add')
-    const werr = h('p', { class: 'error' })
-    add.addEventListener('click', () => {
-      const c = wc.value as ChainKey
-      const p = parseAddress(wa.value, CHAINS[c].family)
-      if (!p.ok) return void (werr.textContent = p.reason)
-      addWatch({ chain: c, address: p.display, label: label.value.trim().slice(0, 60) })
-      renderWatch()
-      onWatchChange()
-    })
-    watchBox.appendChild(h('div', { class: 'row' }, wc, wa, label, add))
-    watchBox.appendChild(werr)
-    const list = getWatchlist()
-    if (list.length === 0) watchBox.appendChild(h('p', { class: 'muted' }, 'Empty.'))
-    const ul = h('ul', { class: 'watch' })
-    for (const w of list) {
-      const rm = h('button', { type: 'button', class: 'link' }, 'remove')
-      rm.addEventListener('click', () => {
-        removeWatch(w.chain, w.address)
-        renderWatch()
-        onWatchChange()
-      })
-      ul.appendChild(h('li', {}, h('span', { class: 'tag' }, w.chain.toUpperCase()), addr(w.address), w.label ? h('span', { class: 'muted' }, ` ${w.label}`) : null, ' ', rm))
-    }
-    watchBox.appendChild(ul)
-  }
-  renderWatch()
 
   const form = h('form', { class: 'card form' }, field('Chain', chain), field('Address', address), err, btn)
   form.addEventListener('submit', async (e) => {
@@ -81,7 +45,6 @@ export function scanTab(onWatchChange: () => void): HTMLElement {
     h('p', { class: 'lead' }, 'Find fake USDT, address-poisoning attempts, risky approvals and account takeovers on an address. Read-only.'),
     form,
     out,
-    watchBox,
   )
 }
 
