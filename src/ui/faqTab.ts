@@ -157,7 +157,7 @@ function items(): { group: string; list: Item[] }[] {
       list: [
         {
           q: 'What data leaves my device?',
-          a: ['Only read requests to public blockchain nodes (and an optional explorer service the site owner may enable). There are no accounts, no analytics and no keys. Your saved addresses stay in this browser.'],
+          a: ['Only read requests to public blockchain nodes (and an optional explorer service the site owner may enable). There are no accounts, no cookies and no keys. The website counts anonymous page views (Cloudflare Web Analytics: no cookies, no personal data, never what you paste). Your saved addresses stay in this browser.'],
         },
         {
           q: 'What can this app not do?',

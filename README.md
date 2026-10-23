@@ -165,7 +165,7 @@ Connecting only asks your wallet one question: which account is selected (`eth_r
 
 ### Privacy
 
-There are no accounts, no analytics and no keys. The browser talks directly to free public blockchain servers. Saved addresses, the view setting and accepted payments stay in this browser. Token names and other chain data are shown as text only, never run as code, and a strict Content Security Policy blocks inline scripts.
+There are no accounts, no cookies and no keys. The website counts anonymous page views with Cloudflare Web Analytics (no cookies, no personal data, nothing you paste); its small beacon script is served from this site, not loaded from elsewhere. The browser talks directly to free public blockchain servers. Saved addresses, the view setting and accepted payments stay in this browser. Token names and other chain data are shown as text only, never run as code, and a strict Content Security Policy blocks inline scripts.
 
 ### The Chrome extension
 

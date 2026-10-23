@@ -57,8 +57,12 @@ describe('F32e supply chain', () => {
     expect(statSync(join(root, 'package-lock.json')).isFile()).toBe(true)
   })
 
-  it('index.html loads no third-party scripts', () => {
+  it('index.html loads no third-party scripts (the analytics beacon is self-hosted)', () => {
     const html = readFileSync(join(root, 'index.html'), 'utf8')
     for (const m of html.matchAll(/<script[^>]*src="([^"]+)"/g)) expect(m[1]!.startsWith('/')).toBe(true)
+    const beacon = /src="\/(cf-beacon-[^"]+)"/.exec(html)![1]!
+    expect(statSync(join(root, 'public', beacon)).isFile()).toBe(true)
+    const code = readFileSync(join(root, 'public', beacon), 'utf8')
+    expect([...new Set(code.match(/https?:\/\/[a-z0-9.-]+/gi))]).toEqual(['https://cloudflareinsights.com'])
   })
 })
