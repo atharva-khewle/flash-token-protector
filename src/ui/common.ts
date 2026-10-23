@@ -1,5 +1,6 @@
 import { CHAIN_KEYS, CHAINS, type ChainKey } from '../registry/chains'
 import { charDiff } from '../lib/lookalike'
+import { formatUnits } from '../verdict/transfer'
 import { h, link } from './dom'
 
 export function chainSelect(initial: ChainKey = 'bsc'): HTMLSelectElement {
@@ -64,4 +65,18 @@ export function explorerLinks(chain: ChainKey, items: { kind: 'tx' | 'address' |
     return url ? [h('span', { class: 'explink' }, link(url, `View ${what} on ${ex.name}`))] : []
   })
   return links.length ? h('div', { class: 'explinks' }, ...links) : null
+}
+
+/** Readable amount: 1,234.56 / 2.40M. Very small values keep their digits. */
+export function shortAmount(v: bigint, decimals: number): string {
+  const n = Number(formatUnits(v, decimals).replace(/,/g, ''))
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
+  return n.toLocaleString('en-US', { maximumFractionDigits: n > 0 && n < 1 ? 6 : 2 })
+}
+
+/** Amount of a token that is not real USDT, in its own units. Its decimals are what it claims. */
+export function tokenAmount(v: bigint, decimals: number | null | undefined, symbol: string | null): string {
+  const sym = (symbol ?? 'tokens').slice(0, 16)
+  return decimals === null || decimals === undefined ? `${v.toString()} raw units` : `${shortAmount(v, decimals)} ${sym}`
 }

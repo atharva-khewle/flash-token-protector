@@ -56,9 +56,9 @@ const SECTIONS: Section[] = [
   },
   {
     id: 'detail',
-    label: 'Detailed analysis',
-    short: 'Analysis',
-    title: 'Detailed analysis',
+    label: 'Deep analysis',
+    short: 'Deep',
+    title: 'Deep analysis',
     desc: 'Checks for your own funds.',
     leaves: [
       { id: 'verify', label: 'Verify a payment', hint: 'Did real USDT reach my address?', make: () => verifyTab() },

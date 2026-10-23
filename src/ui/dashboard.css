@@ -1398,3 +1398,50 @@ button.ghost {
   display: none;
   height: 0;
 }
+
+/* ---- The headline number on a result ---- */
+
+.plainstat {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 14px 0 4px;
+  padding: 12px 16px;
+  border-radius: 14px;
+}
+
+.plainstat .statvalue {
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.plainstat .statlabel {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.plainstat.stat-good {
+  background: rgba(133, 224, 176, 0.1);
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.plainstat.stat-good .statvalue {
+  color: var(--ok);
+}
+
+.plainstat.stat-none {
+  background: rgba(255, 138, 128, 0.08);
+  box-shadow: inset 3px 0 0 var(--bad);
+}
+
+.plainstat.stat-none .statvalue {
+  color: var(--bad);
+}
+
+.amtreal {
+  color: var(--ok);
+  font-weight: 700;
+}

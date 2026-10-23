@@ -88,14 +88,19 @@ export function plainTx(r: TxReportOutput): Plain {
   if (real && receivers.length > 0) {
     const top = receivers.slice(0, 3).map((n) => `${formatUnits(n.value, usdt.decimals)} USDT to ${short(r.chain, n.address)}`)
     points.push(`Real USDT moved: ${top.join('; ')}${receivers.length > 3 ? `; and ${receivers.length - 3} more` : ''}.`)
-    todo.push('To confirm it paid you, use Detailed analysis → Verify a payment with your own address.')
+    todo.push('To confirm it paid you, use Deep analysis → Verify a payment with your own address.')
   } else if (real) {
     points.push('Real USDT moved, but nobody ended up with more than they started (it only passed through).')
   }
 
   if (others.length > 0) {
-    const names = others.map((t) => t.symbol).filter(Boolean).slice(0, 3)
-    points.push(`It also moved ${plural(others.length, 'other token')}${names.length ? ` (${names.join(', ')})` : ''}. That is normal for swaps and is not USDT.`)
+    // Amount moved per token, in its own (self-reported) units.
+    const moved = others.slice(0, 3).map((t) => {
+      const sum = t.transfers.reduce((x, y) => x + y.value, 0n)
+      const sym = t.symbol ?? 'unnamed token'
+      return t.decimals === null || t.decimals === undefined ? sym : `${Number(formatUnits(sum, t.decimals).replace(/,/g, '')).toLocaleString('en-US', { maximumFractionDigits: 2 })} ${sym}`
+    })
+    points.push(`It also moved ${plural(others.length, 'other token')}${moved.length ? ` (${moved.join(', ')})` : ''}. That is normal for swaps and is not USDT.`)
   }
 
   const tiny = r.tokens.some((t) => t.transfers.some((x) => x.value === 0n || (t.verdict === 'REAL USDT' && x.value < 10n ** BigInt(usdt.decimals))))
@@ -215,7 +220,7 @@ export function plainToken(r: TokenCheckOutput): Plain {
   const name = [r.symbol, r.name].filter(Boolean).join(' / ')
   switch (r.verdict) {
     case 'REAL USDT':
-      return { tone: 'good', risk: 0, title: 'This is the real USDT.', points: [`It is exactly the official USDT contract on ${CHAINS[r.chain].name}.`], todo: ['Still check that a payment went to your address (Detailed analysis → Verify a payment).'] }
+      return { tone: 'good', risk: 0, title: 'This is the real USDT.', points: [`It is exactly the official USDT contract on ${CHAINS[r.chain].name}.`], todo: ['Still check that a payment went to your address (Deep analysis → Verify a payment).'] }
     case 'FAKE USDT':
       return {
         tone: 'danger',

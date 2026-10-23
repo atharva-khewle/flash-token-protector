@@ -18,7 +18,7 @@ function items(): { group: string; list: Item[] }[] {
           q: 'Where do I start?',
           a: [
             'Quick check is for anything you were handed. Transaction: someone says they paid you and gave a hash. Wallet address: is this wallet being attacked, or attacking others? Token address: is this token the real USDT?',
-            'Detailed analysis is for your own funds. Verify a payment gives a final yes or no that real USDT reached your address. Monitor a wallet follows an address live. Before you send catches lookalike addresses. Saved addresses is the list every check compares against.',
+            'Deep analysis is for your own funds. Verify a payment gives a final yes or no that real USDT reached your address. Monitor a wallet follows an address live. Before you send catches lookalike addresses. Saved addresses is the list every check compares against.',
           ],
         },
         {

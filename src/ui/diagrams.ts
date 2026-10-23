@@ -10,19 +10,14 @@ import type { ScanOutput } from '../services/scan'
 import type { TokenCheckOutput } from '../services/tokenCheck'
 import type { TxReportOutput } from '../services/txReport'
 import type { VerifyOutput } from '../services/verify'
-import { decodeTransfer, formatUnits } from '../verdict/transfer'
-import { openCheck } from './common'
+import { decodeTransfer } from '../verdict/transfer'
+import { openCheck, shortAmount } from './common'
 import type { BoardSpec, EdgeKind, GEdge, GNode, NodeKind } from './graph'
 
 const short = (s: string) => (s.length > 14 ? `${s.slice(0, 6)}…${s.slice(-4)}` : s)
 
-/** Short amount for an arrow label: 1,234.56 / 2.4M / 0.000012. The full value is in the details. */
-function amount(v: bigint, decimals: number): string {
-  const n = Number(formatUnits(v, decimals))
-  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
-  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
-  return n.toLocaleString('en-US', { maximumFractionDigits: n > 0 && n < 1 ? 6 : 2 })
-}
+/** Short amount for an arrow label: 1,234.56 / 2.40M. The full value is in the details. */
+const amount = shortAmount
 
 // When one address plays several parts, the most alarming one colours the box.
 const RANK: NodeKind[] = ['attacker', 'fake', 'creator', 'me', 'victim', 'real', 'contract', 'wallet', 'unknown']
@@ -181,7 +176,8 @@ export function txDiagram(r: TxReportOutput, intel?: TxIntel): BoardSpec {
       if (n2) notes.push(`${sym}: ${n2}`)
     }
     for (const x of t.transfers.slice(0, 20)) {
-      const e = isReal ? realEdge(r.chain, x.value) : { kind: (isFake ? 'fake' : 'other') as EdgeKind, label: isFake ? `fake “${sym}”` : sym }
+      const amt = t.decimals === null || t.decimals === undefined ? sym : `${amount(x.value, t.decimals)} ${sym}`
+      const e = isReal ? realEdge(r.chain, x.value) : { kind: (isFake ? 'fake' : 'other') as EdgeKind, label: isFake ? `fake ${amt}` : amt }
       const from = b.addr(x.from, { kind: isFake ? 'attacker' : 'wallet', col: 3, badge: isFake ? 'SENT THE FAKE TOKEN' : undefined, title: 'Sender' })
       const to = b.addr(x.to, { kind: isFake ? 'victim' : 'wallet', col: 4, badge: isFake ? 'GOT THE FAKE TOKEN' : isReal ? 'GOT REAL USDT' : undefined, title: 'Receiver' })
       b.edge(from, to, e.kind, e.label)
@@ -234,7 +230,7 @@ export function scanDiagram(s: ScanOutput): BoardSpec {
   const one = 10n ** BigInt(usdt.decimals)
 
   // Aggregate: one arrow per counterparty, direction and kind.
-  type Agg = { cp: Hex; dir: 'in' | 'out'; kind: EdgeKind; n: number; sum: bigint; sym: string }
+  type Agg = { cp: Hex; dir: 'in' | 'out'; kind: EdgeKind; n: number; sum: bigint; sym: string; decimals: number | null }
   const agg = new Map<string, Agg>()
   for (const t of s.transfers) {
     const dir = t.to === me ? 'in' : 'out'
@@ -243,7 +239,7 @@ export function scanDiagram(s: ScanOutput): BoardSpec {
     const real = t.token.toLowerCase() === usdt.hex
     const kind: EdgeKind = real ? (t.value === 0n ? 'zero' : t.value < one / 100n ? 'dust' : 'real') : impersonators.has(t.token) ? 'fake' : 'other'
     const k = `${cp}|${dir}|${kind}`
-    const a = agg.get(k) ?? { cp, dir, kind, n: 0, sum: 0n, sym: real ? 'USDT' : (symbol.get(t.token) ?? t.tokenSymbol ?? 'token') }
+    const a = agg.get(k) ?? { cp, dir, kind, n: 0, sum: 0n, sym: real ? 'USDT' : (symbol.get(t.token) ?? t.tokenSymbol ?? 'token'), decimals: real ? usdt.decimals : t.decimals }
     a.n++
     a.sum += t.value
     agg.set(k, a)
@@ -268,7 +264,11 @@ export function scanDiagram(s: ScanOutput): BoardSpec {
     const cpId = displayAddress(s.chain, a.cp).toLowerCase()
     const times = a.n > 1 ? `${a.n}× ` : ''
     const label =
-      a.kind === 'real' || a.kind === 'dust' ? `${times}${amount(a.sum, usdt.decimals)} USDT` : a.kind === 'zero' ? `${times}zero-value` : a.kind === 'fake' ? `${times}fake “${a.sym}”` : `${times}${a.sym}`
+      a.kind === 'real' || a.kind === 'dust'
+        ? `${times}${amount(a.sum, usdt.decimals)} USDT`
+        : a.kind === 'zero'
+          ? `${times}zero-value`
+          : `${times}${a.kind === 'fake' ? 'fake ' : ''}${a.decimals === null ? `“${a.sym}”` : `${amount(a.sum, a.decimals)} ${a.sym}`}`
     if (a.dir === 'in') b.edge(cpId, meId, a.kind, label)
     else b.edge(meId, cpId, a.kind, label)
   }

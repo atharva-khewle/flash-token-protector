@@ -7,7 +7,7 @@ import { formatUnits } from '../verdict/transfer'
 import type { Headline, Level, ReportToken } from '../verdict/txReport'
 import type { TokenVerdict } from '../verdict/tokenCheck'
 import { clear, field, h, maybeLink } from './dom'
-import { addr, badge, busy, chainSelect, explorerLinks, note } from './common'
+import { addr, badge, busy, chainSelect, explorerLinks, note, shortAmount, tokenAmount } from './common'
 import { txDiagram } from './diagrams'
 import { whiteboard } from './graph'
 import { txIntel, type TxIntel } from '../services/intel'
@@ -29,7 +29,7 @@ const HEAD_TEXT: Record<Headline, string> = {
   'FAILED TX': 'The transaction failed. Nothing moved.',
   'FAKE USDT FOUND': 'A token pretending to be USDT is in this transaction.',
   'PROBLEMS FOUND': 'Read the findings below.',
-  'NO RED FLAGS': 'No red flags in what this transaction did. This does not check that it paid you. Use Detailed analysis → Verify a payment with your address for that.',
+  'NO RED FLAGS': 'No red flags in what this transaction did. This does not check that it paid you. Use Deep analysis → Verify a payment with your address for that.',
 }
 const TOKEN_KIND: Record<TokenVerdict, string> = { 'REAL USDT': 'ok', 'FAKE USDT': 'bad', 'NOT USDT': 'warn', 'NOT A CONTRACT': 'bad', UNKNOWN: 'warn' }
 const LEVEL_CLASS: Record<Level, string> = { bad: 'risk-high', warn: 'risk-medium', info: 'risk-info', ok: 'risk-ok' }
@@ -82,7 +82,9 @@ function tokenBlock(r: TxReportOutput, t: ReportToken): HTMLElement {
         addr(show(x.from)),
         ' → ',
         addr(show(x.to)),
-        h('div', { class: 'muted' }, real ? `${formatUnits(x.value, usdt.decimals)} USDT` : `claims ${x.value.toString()} raw units (its own decimals are not trusted)`),
+        real
+          ? h('div', { class: 'amtreal' }, `${formatUnits(x.value, usdt.decimals)} USDT`)
+          : h('div', {}, h('strong', {}, tokenAmount(x.value, t.decimals, t.symbol)), t.verdict === 'NOT USDT' ? null : h('span', { class: 'muted small' }, ' (as the token reports it; not real money)')),
       ),
     )
   }
@@ -93,6 +95,16 @@ function tokenBlock(r: TxReportOutput, t: ReportToken): HTMLElement {
     h('div', { class: 'muted' }, t.summary),
     rows,
   )
+}
+
+/** The headline number: how much real USDT changed hands (sum of the positive net changes). */
+function realMoved(r: TxReportOutput): { value: string; label: string; tone: 'good' | 'none' } | null {
+  if (r.headline === 'NOT ON CHAIN' || r.headline === 'BLOCK HASH') return null
+  const usdt = canonicalUsdt(r.chain)
+  const total = r.net.reduce((s, n) => (n.value > 0n ? s + n.value : s), 0n)
+  return total > 0n
+    ? { value: `${shortAmount(total, usdt.decimals)} USDT`, label: 'Real USDT moved in this transaction', tone: 'good' }
+    : { value: '0 USDT', label: 'No real USDT moved in this transaction', tone: 'none' }
 }
 
 /** Plain summary on top, then the diagram, full report folded underneath. */
@@ -108,7 +120,7 @@ export function renderTxResult(r: TxReportOutput): HTMLElement {
     { kind: 'tx', value: r.hash },
     ...r.tokens.filter((t) => t.verdict !== 'REAL USDT').slice(0, 2).map((t) => ({ kind: 'token' as const, value: displayAddress(r.chain, t.token), label: `“${(t.symbol ?? 'token').slice(0, 16)}” token` })),
   ])
-  return summaryCard(plainTx(r), renderReport(r), { links, board: slot })
+  return summaryCard(plainTx(r), renderReport(r), { links, board: slot, stat: realMoved(r) })
 }
 
 export function renderReport(r: TxReportOutput): HTMLElement {

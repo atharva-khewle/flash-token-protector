@@ -11,7 +11,7 @@ import { consensusCheck } from '../verdict/verifyTx'
 import { TRANSFER_TOPIC } from '../verdict/transfer'
 import type { Check } from '../verdict/types'
 import { classifyCode, type CodeState } from '../verdict/wallet'
-import { probeToken } from './probe'
+import { probeToken, readDecimals } from './probe'
 
 const MAX_TOKENS = 8
 const MAX_PARTIES = 12
@@ -68,17 +68,18 @@ export async function runTxReport(args: { chain: ChainKey; hash: string; hiddenC
     // Real USDT needs no reads. Judge the rest, capped so a spam tx cannot fan out.
     const others = emitters.filter((t) => t !== usdt.hex)
     skippedTokens = Math.max(0, others.length - MAX_TOKENS)
-    if (emitters.includes(usdt.hex)) tokens.set(usdt.hex, { ...judgeToken(true, null), name: null, symbol: null })
+    if (emitters.includes(usdt.hex)) tokens.set(usdt.hex, { ...judgeToken(true, null), name: null, symbol: null, decimals: usdt.decimals })
     await Promise.all(
       others.slice(0, MAX_TOKENS).map(async (t) => {
         let probe = null
+        let decimals: number | null = null
         try {
           await a.getCode(t)
-          probe = await probeToken(a, t, null, null)
+          ;[probe, decimals] = await Promise.all([probeToken(a, t, null, null), readDecimals(a, t).catch(() => null)])
         } catch {
           probe = null
         }
-        tokens.set(t, { ...judgeToken(false, probe), name: probe?.name ?? null, symbol: probe?.symbol ?? null })
+        tokens.set(t, { ...judgeToken(false, probe), name: probe?.name ?? null, symbol: probe?.symbol ?? null, decimals })
       }),
     )
 

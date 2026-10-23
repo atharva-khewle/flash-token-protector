@@ -49,7 +49,7 @@ The site is a dashboard with four sections in the left menu (a bar across the to
 | Section | What it is for |
 |---|---|
 | **Quick check** | Anything you were handed: a transaction hash, a wallet address or a token address. |
-| **Detailed analysis** | Your own funds: confirm a payment reached *your* address, follow a wallet live, check an address before you pay it, keep a list of your own addresses. |
+| **Deep analysis** | Your own funds: confirm a payment reached *your* address, follow a wallet live, check an address before you pay it, keep a list of your own addresses. |
 | **Attack vectors** | Every trick the tool defends against, each drawn as a diagram with a step-by-step story and a real-world incident. |
 | **FAQ** | Short answers in plain words. |
 
@@ -118,7 +118,7 @@ Paste a token contract address. You get:
 
 For anything that is not the real USDT it also reports what the contract can do to holders (blocked sells / honeypot, mint, pause, blacklist, upgradeable code, balances that do not add up), and the **token map** shows who created or owns it, who is sending it, and who received it.
 
-### Detailed analysis → Verify a payment
+### Deep analysis → Verify a payment
 
 The one to use before releasing anything. Enter the chain, the hash the payer gave you, **your own receiving address**, and optionally the expected amount (and, in Advanced, when the deal started). You get one of four answers:
 
@@ -131,15 +131,15 @@ The one to use before releasing anything. Enter the chain, the hash the payer ga
 
 It also checks that the same transaction was not already used for another deal in this browser, that the sender is not on Tether's blacklist (Ethereum, Tron), and lists any decoy tokens in the transaction. A **payment map** shows the real USDT arrows to you in green and any decoys in red.
 
-### Detailed analysis → Monitor a wallet
+### Deep analysis → Monitor a wallet
 
 Follow one address: connect a browser wallet from the top bar, or just paste an address. You see its real USDT balance and recent transfers, with fake-looking tokens, dust, zero-value transfers and lookalike addresses marked, and a "Needs a look" filter. While the page is open, **every new transfer is checked automatically** and an alert appears at the top (optionally a desktop notification). Click any transfer for the full analysis and map. You can also mark an address as trusted, check an address before you pay it, and export the history as CSV.
 
-### Detailed analysis → Before you send
+### Deep analysis → Before you send
 
 Paste the address you are about to send to. It is compared with your saved addresses and the addresses you really paid. If it looks almost the same but is different, you get **LOOKALIKE** with the differing characters highlighted. Exact matches say KNOWN; anything else says NEW so you confirm it from the original source. It also warns if the address is a contract or the USDT contract itself (tokens sent there are usually lost).
 
-### Detailed analysis → Saved addresses
+### Deep analysis → Saved addresses
 
 Your own addresses (for example your exchange deposit addresses), stored only in this browser. Every check compares against this list to catch lookalikes.
 

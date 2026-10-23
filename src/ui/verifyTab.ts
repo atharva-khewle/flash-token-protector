@@ -86,7 +86,13 @@ export function verifyTab(): HTMLElement {
       draw()
       if (r.receipt) void txParties(c, r.hash).then(draw, () => undefined)
       const links = explorerLinks(c, [{ kind: 'tx', value: r.hash }, ...(r.target ? [{ kind: 'address' as const, value: displayAddress(c, r.target), label: 'your address' }] : [])])
-      out.appendChild(summaryCard(plainVerify(r), renderResult(r), { links, board: slot }))
+      const stat =
+        r.target && r.netToTarget !== null
+          ? r.netToTarget > 0n
+            ? { value: `${r.netFormatted} USDT`, label: 'Real USDT that reached your address', tone: 'good' as const }
+            : { value: '0 USDT', label: 'No real USDT reached your address', tone: 'none' as const }
+          : null
+      out.appendChild(summaryCard(plainVerify(r), renderResult(r), { links, board: slot, stat }))
     } catch (e2) {
       out.appendChild(note(`Could not complete the check: ${e2 instanceof Error ? e2.message : String(e2)}. Result: UNVERIFIED.`, 'warn'))
     } finally {

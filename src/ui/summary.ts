@@ -12,7 +12,11 @@ const LEVEL = { good: 'Low risk', caution: 'Be careful', danger: 'High risk' } a
  * `links`: explorer links shown inside the card. `board`: the diagram (or a slot filled later),
  * shown under the summary in both views.
  */
-export function summaryCard(p: Plain, details: HTMLElement, extra: { links?: HTMLElement | null; board?: HTMLElement | null } = {}): HTMLElement {
+export function summaryCard(
+  p: Plain,
+  details: HTMLElement,
+  extra: { links?: HTMLElement | null; board?: HTMLElement | null; stat?: { value: string; label: string; tone: 'good' | 'none' } | null } = {},
+): HTMLElement {
   const dial = h('div', { class: `dial dial-${p.tone}`, role: 'img', 'aria-label': `Risk ${p.risk} out of 100: ${LEVEL[p.tone]}` }, h('span', { class: 'dialicon', 'aria-hidden': 'true' }, ICON[p.tone]))
   // CSSOM (allowed by the page CSP), not an inline style attribute.
   dial.style.setProperty('--pct', `${p.risk}%`)
@@ -34,6 +38,7 @@ export function summaryCard(p: Plain, details: HTMLElement, extra: { links?: HTM
         dial,
         h('div', { class: 'plaintitle' }, h('div', { class: 'risklabel' }, `${LEVEL[p.tone]} · ${p.risk}/100`), h('h2', {}, p.title)),
       ),
+      extra.stat ? h('div', { class: `plainstat stat-${extra.stat.tone}` }, h('span', { class: 'statvalue' }, extra.stat.value), h('span', { class: 'statlabel' }, extra.stat.label)) : null,
       p.points.length ? h('ul', { class: 'plainpoints' }, ...p.points.map((x) => h('li', {}, x))) : null,
       p.todo.length ? h('div', { class: 'plaintodo' }, h('strong', {}, 'What to do'), h('ul', {}, ...p.todo.map((x) => h('li', {}, x)))) : null,
       extra.links ?? null,

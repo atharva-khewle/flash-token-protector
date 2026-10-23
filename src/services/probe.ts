@@ -35,6 +35,18 @@ export async function balanceOf(a: ChainAdapter, token: Hex, holder: Hex): Promi
   }
 }
 
+/** The token's own decimals(). Only for display: a fake token can report anything. */
+export async function readDecimals(a: ChainAdapter, token: Hex): Promise<number | null> {
+  const r = await a.call(token, encodeFunctionData({ abi: erc20Abi, functionName: 'decimals' }))
+  if (!r.ok || r.data === '0x') return null
+  try {
+    const d = Number(decodeFunctionResult({ abi: erc20Abi, functionName: 'decimals', data: r.data }))
+    return Number.isInteger(d) && d >= 0 && d <= 36 ? d : null
+  } catch {
+    return null
+  }
+}
+
 export async function probeToken(a: ChainAdapter, token: Hex, holder: Hex | null, loggedValue: bigint | null): Promise<TokenProbe> {
   const [code, name, symbol, implSlot, beaconSlot] = await Promise.all([
     a.getCode(token).catch(() => '0x' as Hex),

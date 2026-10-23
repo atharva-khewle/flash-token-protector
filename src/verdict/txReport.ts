@@ -30,6 +30,8 @@ export interface ReportToken extends TokenCheckResult {
   token: Hex
   name: string | null
   symbol: string | null
+  /** Decimals for display. Real USDT: from the registry. Others: what the token reports (untrusted). */
+  decimals?: number | null
   transfers: ReportTransfer[]
 }
 
