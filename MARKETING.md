@@ -4,7 +4,7 @@ Everything here is free to do. Copy, paste, adjust the voice to sound like you. 
 
 **Links used in every post**
 
-- Website: https://flash-token-protector.pages.dev
+- Website: https://flashguard-usdt.web.app
 - Source: https://github.com/atharva-khewle/flash-token-protector
 - Chrome / Brave extension: https://github.com/atharva-khewle/flash-token-protector/releases/latest
 - Real examples to try (fake USDT tokens found on BSC): https://github.com/atharva-khewle/flash-token-protector/blob/main/docs/TEST_TXS.md
@@ -63,7 +63,7 @@ I built a free, open-source checker: paste a tx hash or token address and it tel
 
 BNB Chain, Ethereum, Tron. No keys, no signing.
 
-https://flash-token-protector.pages.dev
+https://flashguard-usdt.web.app
 ```
 
 ### Thread (post each numbered item as a reply to the previous one)
@@ -86,7 +86,7 @@ Anything else calling itself USDT is a lookalike.
 ```
 3/ Paste a transaction hash and it lists every token that moved, who sent what to whom, and flags what is wrong: fake USDT, zero-value "poisoning" transfers, failed or not-final transactions.
 
-https://flash-token-protector.pages.dev
+https://flashguard-usdt.web.app
 ```
 
 ```
@@ -123,11 +123,11 @@ Feedback and bug reports welcome: https://github.com/atharva-khewle/flash-token-
 ### Short follow-up posts (use over the following weeks, one at a time)
 
 ```
-If someone says "I sent you USDT" and shows a screenshot, the only thing that matters is the transaction hash and the contract. Check it here, takes 10 seconds: https://flash-token-protector.pages.dev
+If someone says "I sent you USDT" and shows a screenshot, the only thing that matters is the transaction hash and the contract. Check it here, takes 10 seconds: https://flashguard-usdt.web.app
 ```
 
 ```
-Never copy a receiving address from your wallet history. Attackers plant lookalike addresses there with zero-value transfers. Paste addresses from the original source, then compare. Free checker: https://flash-token-protector.pages.dev
+Never copy a receiving address from your wallet history. Attackers plant lookalike addresses there with zero-value transfers. Paste addresses from the original source, then compare. Free checker: https://flashguard-usdt.web.app
 ```
 
 ```
@@ -151,7 +151,7 @@ Built a free, open-source checker for fake USDT.
 
 Anyone can deploy a token named "USDT". This tool compares the contract address, so a lookalike can't pass. BNB Chain, Ethereum, Tron. Read-only: no keys, no signing.
 
-https://flash-token-protector.pages.dev
+https://flashguard-usdt.web.app
 ```
 
 ### Cast 2: technical angle
@@ -193,7 +193,7 @@ What I am proud of:
 
 Works on BNB Chain, Ethereum and Tron, as a website and a Chrome/Brave extension.
 
-Try it: https://flash-token-protector.pages.dev
+Try it: https://flashguard-usdt.web.app
 Code: https://github.com/atharva-khewle/flash-token-protector
 
 I would like honest feedback, especially from people who trade P2P or work in security.
@@ -204,7 +204,7 @@ I would like honest feedback, especially from people who trade P2P or work in se
 ### Short version
 
 ```
-Shipped: a free, open-source checker that tells you if a USDT payment is real or a lookalike token. Read-only, no keys. BNB Chain, Ethereum, Tron. https://flash-token-protector.pages.dev  Feedback welcome.
+Shipped: a free, open-source checker that tells you if a USDT payment is real or a lookalike token. Read-only, no keys. BNB Chain, Ethereum, Tron. https://flashguard-usdt.web.app  Feedback welcome.
 ```
 
 ---
@@ -228,7 +228,7 @@ What it does:
 
 Details: read-only (no keys, no signing, wallet connect is optional and only reads the selected account), MIT licensed, supports BNB Chain, Ethereum and Tron. Tested on real fake tokens found on BSC and 31 scripted attack scenarios.
 
-Site: https://flash-token-protector.pages.dev
+Site: https://flashguard-usdt.web.app
 Code: https://github.com/atharva-khewle/flash-token-protector
 
 I am the author. Feedback, bug reports and "you missed this scam pattern" comments are very welcome.
@@ -323,7 +323,7 @@ Everything is read-only: no keys, no signing; connecting a wallet is optional an
 
 Known limits: public RPCs only cover real USDT history for about a day on BSC; listing every fake token ever sent to an address needs an indexer key. It cannot see off-chain things like chargebacks.
 
-Site: https://flash-token-protector.pages.dev
+Site: https://flashguard-usdt.web.app
 Happy to take criticism, especially about what scam patterns I missed.
 ```
 
@@ -376,7 +376,7 @@ You can also follow a wallet address: it shows the real USDT balance and history
 
 It also comes as a Chrome/Brave extension that badges token links on BscScan and Etherscan ("real USDT" or "NOT USDT") and warns when a pasted address is not the one you copied.
 
-- Website: https://flash-token-protector.pages.dev
+- Website: https://flashguard-usdt.web.app
 - Code and tests: https://github.com/atharva-khewle/flash-token-protector
 - Real fake tokens to try it on: https://github.com/atharva-khewle/flash-token-protector/blob/main/docs/TEST_TXS.md
 
@@ -406,7 +406,7 @@ Real USDT on BNB Chain: 0x55d398326f99059fF775485246999027B3197955
 If the token contract is different, it is fake.
 
 Never trust a screenshot. Ask for the transaction hash and check it here (free, read-only, no wallet needed):
-https://flash-token-protector.pages.dev
+https://flashguard-usdt.web.app
 
 Also: never copy a receiving address from your wallet history. Scammers plant lookalike addresses there with zero-value transfers.
 
@@ -426,7 +426,7 @@ Fake USDT is just a token with a copied name.
 
 Real BNB Chain USDT is one contract: 0x55d398326f99059fF775485246999027B3197955. Anything else calling itself USDT is a lookalike.
 
-Free checker I built, paste a tx hash and it tells you: https://flash-token-protector.pages.dev
+Free checker I built, paste a tx hash and it tells you: https://flashguard-usdt.web.app
 ```
 
 ### Facebook (post and groups)
@@ -438,7 +438,7 @@ Scammers send "USDT" that is actually a worthless token with a copied name. It l
 
 I made a free, open-source tool that does it for you: paste a transaction hash and it says if the USDT is real. Works for BNB Chain (BEP20), Ethereum and Tron. No login, no wallet connection needed, no keys.
 
-https://flash-token-protector.pages.dev
+https://flashguard-usdt.web.app
 
 If you do P2P trading or get paid in crypto, please share this with someone who does.
 ```
@@ -456,7 +456,7 @@ Carousel (one idea per slide, large text on a dark background; make it in Canva 
 3. **"Only the contract address does."** BNB Chain USDT: 0x55d3…7955.
 4. **"Never trust a screenshot."** Ask for the transaction hash.
 5. **"Never copy an address from history."** Scammers plant lookalikes with zero-value transfers.
-6. **"Check it free."** flash-token-protector.pages.dev (link in bio).
+6. **"Check it free."** flashguard-usdt.web.app (link in bio).
 
 Caption:
 
@@ -473,13 +473,13 @@ Only in groups where tools are welcome. Ask an admin if unsure, and never messag
 ### Short message
 
 ```
-Free tool for checking if a USDT payment is real (BNB Chain, Ethereum, Tron). Paste the tx hash, it checks the contract address and flags fake tokens and address poisoning. No wallet needed, open source: https://flash-token-protector.pages.dev
+Free tool for checking if a USDT payment is real (BNB Chain, Ethereum, Tron). Paste the tx hash, it checks the contract address and flags fake tokens and address poisoning. No wallet needed, open source: https://flashguard-usdt.web.app
 ```
 
 ### Message for P2P and trading groups
 
 ```
-Tip for anyone receiving USDT outside an exchange's own system: a "payment" can be a token that only copies the name "USDT". Ask for the transaction hash and check it at https://flash-token-protector.pages.dev (free, read-only). Also confirm in your exchange's deposit history before releasing anything.
+Tip for anyone receiving USDT outside an exchange's own system: a "payment" can be a token that only copies the name "USDT". Ask for the transaction hash and check it at https://flashguard-usdt.web.app (free, read-only). Also confirm in your exchange's deposit history before releasing anything.
 ```
 
 ### Hindi / Hinglish version (optional; adjust to your own voice)
@@ -487,7 +487,7 @@ Tip for anyone receiving USDT outside an exchange's own system: a "payment" can 
 ```
 Dhyan do: koi bhi "USDT" naam ka token bana sakta hai. Wallet me naam same dikhta hai, par asli USDT sirf ek contract address hai.
 BNB Chain (BEP20) ka asli USDT: 0x55d398326f99059fF775485246999027B3197955
-Screenshot pe bharosa mat karo, tx hash lo aur yahan check karo (free, koi login ya wallet connect nahi): https://flash-token-protector.pages.dev
+Screenshot pe bharosa mat karo, tx hash lo aur yahan check karo (free, koi login ya wallet connect nahi): https://flashguard-usdt.web.app
 ```
 
 ---
@@ -509,7 +509,7 @@ Format: screen recording of the website with your voice or captions. Free tools:
 Description:
 
 ```
-Free checker for fake/flash USDT (BNB Chain, Ethereum, Tron): https://flash-token-protector.pages.dev
+Free checker for fake/flash USDT (BNB Chain, Ethereum, Tron): https://flashguard-usdt.web.app
 Code: https://github.com/atharva-khewle/flash-token-protector
 Read-only. No keys, no signing. I am the author.
 ```
@@ -523,7 +523,7 @@ Video ideas for later: "3 ways fake USDT tricks you", "What is address poisoning
 Run these once to improve discoverability:
 
 ```bash
-gh repo edit atharva-khewle/flash-token-protector --homepage "https://flash-token-protector.pages.dev"
+gh repo edit atharva-khewle/flash-token-protector --homepage "https://flashguard-usdt.web.app"
 gh repo edit atharva-khewle/flash-token-protector --add-topic usdt,tether,bsc,bnb-chain,ethereum,tron,scam-detection,address-poisoning,chrome-extension,web3-security,crypto-security,erc20,bep20
 ```
 
@@ -559,7 +559,7 @@ Open the transaction on the explorer, click the token and compare its contract a
 
 If it is a different address, it is not USDT even if it is named USDT. Also check the transaction is confirmed and final, and confirm in your exchange's deposit history before releasing goods.
 
-Disclosure: I wrote a free open-source tool that automates these checks: https://flash-token-protector.pages.dev
+Disclosure: I wrote a free open-source tool that automates these checks: https://flashguard-usdt.web.app
 ```
 
 Always disclose that you are the author.

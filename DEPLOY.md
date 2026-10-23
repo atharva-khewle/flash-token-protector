@@ -49,6 +49,17 @@ npx wrangler@4 pages dev dist --binding EXPLORER_API_KEY=<key>
 
 **Free-tier limits (Cloudflare, check the current pricing page):** unlimited static requests and bandwidth, 500 builds/month, and Pages Functions count against the Workers free plan (100,000 requests/day).
 
+## Firebase Hosting (main site)
+
+Live at <https://flashguard-usdt.web.app>, a Hosting site inside the Firebase project `portfoliofinal-a6483`. `firebase.json` serves `dist/` with the same security headers as `public/_headers` (a test keeps the CSP in sync). The `/api/explorer` function is not deployed there (Firebase functions need a paid plan); the app works without it.
+
+```bash
+npm run build
+npx firebase-tools@14 deploy --only hosting --project portfoliofinal-a6483
+```
+
+Why not only Cloudflare Pages: MetaMask's site scanner flags every `*.pages.dev`, `*.vercel.app`, `*.netlify.app` and `*.github.io` subdomain as a "wallet drainer", whatever the content. `*.web.app` is not flagged. Check any host with `https://dapp-scanning.api.cx.metamask.io/scan?url=<host>`.
+
 ## Vercel
 
 `vercel.json` sets the build, the output directory and the same security headers. `api/explorer.ts` runs as an Edge Function at `/api/explorer`.

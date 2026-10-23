@@ -2,7 +2,7 @@
 
 These are real BSC mainnet transactions found by scanning blocks with `scripts/find-fake-usdt.ts`. They are not from a published study or incident report; they are what was on chain when the scan ran (2026-10-19). Nothing here was created or sent by this project.
 
-Paste each hash into the **Analyze tx** tab (hash and chain only; it finds the tokens and addresses itself), or into the **Verify tx** tab on the [website](https://flash-token-protector.pages.dev) with chain **BSC**, the hash, and the recipient shown. Leaving the amount empty is fine.
+Paste each hash into the **Analyze tx** tab (hash and chain only; it finds the tokens and addresses itself), or into the **Verify tx** tab on the [website](https://flashguard-usdt.web.app) with chain **BSC**, the hash, and the recipient shown. Leaving the amount empty is fine.
 
 ## Fake "USDT" (expected result: FAKE)
 

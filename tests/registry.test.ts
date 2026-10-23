@@ -38,6 +38,8 @@ describe('L2 registry', () => {
     expect(csp).not.toContain('unsafe-eval')
     const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8')) as { headers: { headers: { key: string; value: string }[] }[] }
     expect(vercel.headers[0]!.headers.find((x) => x.key === 'Content-Security-Policy')!.value).toBe(csp)
+    const firebase = JSON.parse(readFileSync(new URL('../firebase.json', import.meta.url), 'utf8')) as { hosting: { headers: { headers: { key: string; value: string }[] }[] } }
+    expect(firebase.hosting.headers[0]!.headers.find((x) => x.key === 'Content-Security-Policy')!.value).toBe(csp)
   })
 
   it('explorer links are built from the registry, https only', () => {
