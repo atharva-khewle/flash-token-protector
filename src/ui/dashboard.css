@@ -1445,3 +1445,100 @@ button.ghost {
   color: var(--ok);
   font-weight: 700;
 }
+
+/* ---- All transactions of an address ---- */
+
+.txl-wrap {
+  margin-top: 12px;
+}
+
+.txl-toggle {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid rgba(171, 159, 242, 0.35);
+  font-weight: 600;
+}
+
+.txl {
+  margin-top: 12px;
+}
+
+.txl-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.txl-bar select {
+  width: auto;
+  min-width: 200px;
+}
+
+.txl-scroll {
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.txl-table {
+  width: 100%;
+  min-width: 720px;
+  font-size: 14px;
+}
+
+.txl-table td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.txl-dir.in {
+  color: var(--ok);
+}
+
+.txl-dir.out {
+  color: var(--warn);
+}
+
+.txl-tok {
+  font-weight: 600;
+}
+
+.txl-tok.k-real {
+  color: var(--ok);
+}
+
+.txl-tok.k-fake {
+  color: var(--bad);
+}
+
+.txl-flag {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--bad);
+}
+
+.txl-amt {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.txl-amt.real {
+  color: var(--ok);
+}
+
+.txl-amt.fake {
+  color: var(--bad);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.txl-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

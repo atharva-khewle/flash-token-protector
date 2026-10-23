@@ -3,6 +3,7 @@
 
 import type { Hex } from '../chains/types'
 import { displayAddress } from '../lib/address'
+import { tronToHex } from '../lib/tron'
 import { CHAINS, type ChainKey } from '../registry/chains'
 import { canonicalUsdt } from '../registry/usdt'
 import type { Creator, Spread, TxIntel } from '../services/intel'
@@ -276,7 +277,10 @@ export function scanDiagram(s: ScanOutput): BoardSpec {
   // Lookalikes: show what they imitate.
   for (const p of s.wallet.poisoning) {
     if (!p.match || !b.has(p.counterparty)) continue
-    const real = b.addr(p.match.target as Hex, { kind: 'wallet', col: 2, badge: 'THE REAL CONTACT', title: 'Real address' })
+    // match.target is the displayed form (base58 on Tron); boxes are keyed by the hex form.
+    const targetHex = CHAINS[s.chain].family === 'tron' ? tronToHex(p.match.target) : (p.match.target.toLowerCase() as Hex)
+    if (!targetHex) continue
+    const real = b.addr(targetHex, { kind: 'wallet', col: 2, badge: 'THE REAL CONTACT', title: 'Real address' })
     b.edge(displayAddress(s.chain, p.counterparty).toLowerCase(), real, 'lookalike', 'imitates')
   }
   for (const ap of s.approvals) {

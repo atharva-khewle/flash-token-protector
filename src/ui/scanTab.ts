@@ -10,6 +10,7 @@ import { plainScan } from '../verdict/plain'
 import { addr, badge, busy, chainSelect, diffAddress, explorerLinks, note } from './common'
 import { scanDiagram } from './diagrams'
 import { whiteboard } from './graph'
+import { txListPanel } from './txList'
 
 export function scanTab(): HTMLElement {
   const chain = chainSelect('bsc')
@@ -45,7 +46,7 @@ export function scanTab(): HTMLElement {
             b.after(note(`Could not read more: ${e3 instanceof Error ? e3.message : String(e3)}`, 'warn'))
           }
         })
-        const board = h('div', {}, roleCard(res), whiteboard(scanDiagram(res)), more)
+        const board = h('div', {}, roleCard(res), whiteboard(scanDiagram(res)), more, txListPanel(res))
         out.appendChild(summaryCard(plainScan(res), renderScan(res), { links: explorerLinks(c, [{ kind: 'address', value: displayAddress(c, res.address) }]), board }))
       }
       show(await runScan(c, p.hex, watch))
