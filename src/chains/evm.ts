@@ -260,6 +260,46 @@ export class EvmAdapter implements ChainAdapter {
     }
   }
 
+  /** Who signed a transaction and what it called (null `to` = contract creation). */
+  async getTxParties(hash: string): Promise<{ from: Hex; to: Hex | null } | null> {
+    try {
+      const tx = (await this.any((r) => r('eth_getTransactionByHash', [hash]))) as { from: string; to: string | null } | null
+      return tx ? { from: lc(tx.from), to: tx.to ? lc(tx.to) : null } : null
+    } catch {
+      return null
+    }
+  }
+
+  /** Code at a past block. Needs an archive node; pruned nodes throw, which callers treat as "unknown". */
+  async getCodeAt(address: Hex, block: bigint): Promise<Hex> {
+    return lc((await this.any((r) => r('eth_getCode', [address, `0x${block.toString(16)}`]))) as string)
+  }
+
+  /** The transaction in `block` that deployed `address` directly, if any. */
+  async findDeployment(block: bigint, address: Hex): Promise<{ txHash: string; from: Hex } | null> {
+    try {
+      const rs = (await this.any((r) => r('eth_getBlockReceipts', [`0x${block.toString(16)}`]))) as
+        | { transactionHash: string; from: string; contractAddress?: string | null }[]
+        | null
+      const hit = rs?.find((x) => x.contractAddress && x.contractAddress.toLowerCase() === address.toLowerCase())
+      return hit ? { txHash: hit.transactionHash.toLowerCase(), from: lc(hit.from) } : null
+    } catch {
+      return null
+    }
+  }
+
+  /** Contract creator from the explorer index, through the same proxy as listTokenTransfers. */
+  async creatorFromExplorer(address: Hex): Promise<{ creator: Hex; txHash: string } | null> {
+    if (!this.explorerProxy || this.info.unrestrictedLogs) return null
+    try {
+      const body = (await fetchJson(`${this.explorerProxy}?chain=${this.chain}&address=${address}&kind=creator`)) as { available?: boolean; creator?: string; txHash?: string }
+      if (!body.available || !body.creator || !/^0x[0-9a-fA-F]{40}$/.test(body.creator)) return null
+      return { creator: lc(body.creator), txHash: String(body.txHash ?? '').toLowerCase() }
+    } catch {
+      return null
+    }
+  }
+
   /** Local dev node only: any-token transfer logs straight from the node, no indexer needed. */
   private async listFromNode(address: Hex): Promise<Maybe<TokenTransfer[]>> {
     try {

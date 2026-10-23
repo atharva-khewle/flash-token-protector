@@ -73,6 +73,8 @@ export async function handleExplorer(req: Request, env: ExplorerEnv, now = Date.
     return json({ available: false, reason: 'This deployment has no EXPLORER_API_KEY, so fake-token transfers cannot be listed.' })
   }
 
+  if (url.searchParams.get('kind') === 'creator') return creator(chainId, address, env.EXPLORER_API_KEY)
+
   const api = new URL('https://api.etherscan.io/v2/api')
   api.search = new URLSearchParams({
     chainid: String(chainId),
@@ -109,6 +111,23 @@ export async function handleExplorer(req: Request, env: ExplorerEnv, now = Date.
         value: /^\d+$/.test(i.value) ? i.value : '0',
       }))
     return json({ available: true, items })
+  } catch {
+    return json({ available: false, reason: 'Explorer request failed.' }, 502)
+  }
+}
+
+/** Who deployed a contract, and in which transaction. */
+async function creator(chainId: number, address: string, key: string): Promise<Response> {
+  const api = new URL('https://api.etherscan.io/v2/api')
+  api.search = new URLSearchParams({ chainid: String(chainId), module: 'contract', action: 'getcontractcreation', contractaddresses: address, apikey: key }).toString()
+  try {
+    const res = await fetch(api.toString(), { headers: { accept: 'application/json' } })
+    const body = (await res.json()) as { result?: { contractCreator?: string; txHash?: string }[] | string; message?: string }
+    const r = Array.isArray(body.result) ? body.result[0] : undefined
+    if (!r || !/^0x[0-9a-fA-F]{40}$/.test(r.contractCreator ?? '')) {
+      return json({ available: false, reason: `Explorer said: ${String(typeof body.result === 'string' ? body.result : body.message ?? 'no creator').slice(0, 160)}` })
+    }
+    return json({ available: true, creator: r.contractCreator, txHash: /^0x[0-9a-fA-F]{64}$/.test(r.txHash ?? '') ? r.txHash : null })
   } catch {
     return json({ available: false, reason: 'Explorer request failed.' }, 502)
   }

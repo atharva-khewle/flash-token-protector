@@ -94,6 +94,54 @@ export class TronAdapter implements ChainAdapter {
     return []
   }
 
+  /** Who signed a transaction and which contract it called. */
+  async getTxParties(hash: string): Promise<{ from: Hex; to: Hex | null } | null> {
+    try {
+      const tx = (await this.any('/wallet/gettransactionbyid', { value: hash })) as {
+        raw_data?: { contract?: { parameter?: { value?: { owner_address?: string; contract_address?: string; to_address?: string } } }[] }
+      }
+      const v = tx?.raw_data?.contract?.[0]?.parameter?.value
+      if (!v?.owner_address) return null
+      const to = v.contract_address ?? v.to_address
+      return { from: logAddr(v.owner_address), to: to ? logAddr(to) : null }
+    } catch {
+      return null
+    }
+  }
+
+  /** The account that deployed a contract (Tron keeps it on the contract itself). */
+  async getCreator(address: Hex): Promise<Hex | null> {
+    try {
+      const r = (await this.any('/wallet/getcontract', { value: `41${strip(address)}` })) as { origin_address?: string }
+      return r?.origin_address ? logAddr(r.origin_address) : null
+    } catch {
+      return null
+    }
+  }
+
+  /** Recent confirmed Transfer events of one TRC20 token (TronGrid index). */
+  async tokenTransfers(token: Hex, limit = 50): Promise<{ txHash: string; from: Hex; to: Hex; value: bigint }[]> {
+    const base = this.info.logRpcs[0]!
+    const body = (await fetchJson(`${base}/v1/contracts/${hexToTron(token)}/events?event_name=Transfer&only_confirmed=true&limit=${limit}`)) as {
+      data?: { transaction_id: string; result?: Record<string, string> }[]
+    }
+    const out: { txHash: string; from: Hex; to: Hex; value: bigint }[] = []
+    const addr = (s: string | undefined): Hex | null => {
+      if (!s) return null
+      if (s.startsWith('T')) return tronToHex(s)
+      return /^(0x)?(41)?[0-9a-fA-F]{40}$/.test(s) ? logAddr(s.replace(/^0x/, '')) : null
+    }
+    for (const d of body.data ?? []) {
+      const r = d.result ?? {}
+      const from = addr(r.from ?? r['0'])
+      const to = addr(r.to ?? r['1'])
+      const v = r.value ?? r['2']
+      if (!from || !to || !v || !/^\d+$/.test(v)) continue
+      out.push({ txHash: d.transaction_id, from, to, value: BigInt(v) })
+    }
+    return out
+  }
+
   async getCode(address: Hex): Promise<Hex> {
     const r = (await this.any('/wallet/getcontract', { value: `41${strip(address)}` })) as { bytecode?: string }
     return r?.bytecode ? hx(r.bytecode) : '0x'
@@ -161,10 +209,12 @@ export class TronAdapter implements ChainAdapter {
     return acc.owner_permission ?? { threshold: 1, keys: [{ address, weight: 1 }] }
   }
 
-  /** Recent TRC20 Transfer and Approval events for an address (TronGrid index, confirmed only). */
-  async listTrc20(address: Hex): Promise<{ transfers: TokenTransfer[]; approvals: { token: Hex; spender: Hex }[] }> {
+  /** Recent TRC20 Transfer and Approval events for an address (TronGrid index, confirmed only).
+   *  One page (200) of TRC20 events. Pass the returned `next` to get the page before it. */
+  async listTrc20(address: Hex, fingerprint?: string | null): Promise<{ transfers: TokenTransfer[]; approvals: { token: Hex; spender: Hex }[]; next: string | null }> {
     const base = this.info.logRpcs[0]!
-    const url = `${base}/v1/accounts/${hexToTron(address)}/transactions/trc20?limit=200&only_confirmed=true`
+    const fp = fingerprint ? `&fingerprint=${encodeURIComponent(fingerprint)}` : ''
+    const url = `${base}/v1/accounts/${hexToTron(address)}/transactions/trc20?limit=200&only_confirmed=true${fp}`
     const body = (await fetchJson(url)) as {
       data?: {
         transaction_id: string
@@ -175,6 +225,7 @@ export class TronAdapter implements ChainAdapter {
         type: string
         value: string
       }[]
+      meta?: { fingerprint?: string }
     }
     const transfers: TokenTransfer[] = []
     const approvals: { token: Hex; spender: Hex }[] = []
@@ -202,7 +253,8 @@ export class TronAdapter implements ChainAdapter {
         txFrom: null,
       })
     }
-    return { transfers, approvals }
+    const next = (body.data?.length ?? 0) >= 200 && body.meta?.fingerprint ? body.meta.fingerprint : null
+    return { transfers, approvals, next }
   }
 
   async listTokenTransfers(address: Hex): Promise<Maybe<TokenTransfer[]>> {
