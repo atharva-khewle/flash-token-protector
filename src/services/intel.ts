@@ -8,10 +8,13 @@ import type { TronAdapter } from '../chains/tron'
 import type { Hex } from '../chains/types'
 import { CHAINS, type ChainKey } from '../registry/chains'
 import { topicToAddress, TRANSFER_TOPIC } from '../verdict/transfer'
+import type { TxReportOutput } from './txReport'
 
 export interface Creator {
   creator: Hex | null
   txHash: string | null
+  /** The token's owner() when the creator is unknown. Usually the deployer, or whoever it was handed to. */
+  owner?: Hex | null
   /** Plain sentence about how it was found, or why not. */
   note: string
 }
@@ -66,13 +69,28 @@ async function evmCreator(chain: ChainKey, contract: Hex): Promise<Creator> {
   }
 }
 
+/** owner() of an Ownable contract, or null. */
+async function ownerOf(chain: ChainKey, contract: Hex): Promise<Hex | null> {
+  const r = await adapterFor(chain).call(contract, '0x8da5cb5b')
+  if (!r.ok || r.data.length !== 66) return null
+  const a = `0x${r.data.slice(-40)}` as Hex
+  return /^0x0{40}$/.test(a) ? null : a
+}
+
 export async function findCreator(chain: ChainKey, contract: Hex): Promise<Creator> {
   const fallback: Creator = { creator: null, txHash: null, note: 'Creator lookup took too long.' }
+  let c: Creator
   if (isTron(chain)) {
-    const c = await (adapterFor(chain) as TronAdapter).getCreator(contract)
-    return c ? { creator: c, txHash: null, note: 'Recorded on the contract by the Tron network.' } : { creator: null, txHash: null, note: 'Creator not readable.' }
+    const t = await (adapterFor(chain) as TronAdapter).getCreator(contract)
+    c = t ? { creator: t, txHash: null, note: 'Recorded on the contract by the Tron network.' } : { creator: null, txHash: null, note: 'Creator not readable.' }
+  } else {
+    c = await withTimeout(evmCreator(chain, contract), 15_000, fallback)
   }
-  return withTimeout(evmCreator(chain, contract), 15_000, fallback)
+  if (!c.creator) {
+    const owner = await ownerOf(chain, contract).catch(() => null)
+    if (owner) return { ...c, owner, note: `${c.note} The contract names ${owner} as its owner, which is usually the deployer.` }
+  }
+  return c
 }
 
 /**
@@ -91,16 +109,32 @@ export async function tokenSpread(chain: ChainKey, token: Hex, aroundBlock?: big
       const a = adapterFor(chain) as EvmAdapter
       const head = (await a.getFinality()).head
       const span = BigInt(Math.max(1, a.logChunk))
-      let from = aroundBlock ? aroundBlock - span / 2n : head - span + 1n
-      if (from < 0n) from = 0n
-      let to = from + span - 1n
-      if (to > head) to = head
-      const logs = await a.getLogs({ address: token, topics: [TRANSFER_TOPIC], fromBlock: from, toBlock: to })
+      const window = (centre: bigint | null) => {
+        let from = centre !== null ? centre - span / 2n : head - span + 1n
+        if (from < 0n) from = 0n
+        let to = from + span - 1n
+        if (to > head) to = head
+        return { from, to }
+      }
+      // Around the transaction first; free servers refuse old blocks, so fall back to recent activity.
+      let w = window(aroundBlock ?? null)
+      let logs
+      let recent = aroundBlock == null
+      try {
+        logs = await a.getLogs({ address: token, topics: [TRANSFER_TOPIC], fromBlock: w.from, toBlock: w.to })
+      } catch (e) {
+        if (aroundBlock == null) throw e
+        w = window(null)
+        recent = true
+        logs = await a.getLogs({ address: token, topics: [TRANSFER_TOPIC], fromBlock: w.from, toBlock: w.to })
+      }
+      const from = w.from
+      const to = w.to
       transfers = logs
         .filter((l) => l.topics.length === 3 && l.data.length === 66)
         .slice(-200)
         .map((l) => ({ txHash: l.txHash, from: topicToAddress(l.topics[1]!), to: topicToAddress(l.topics[2]!), value: BigInt(l.data) }))
-      note = `Transfers of this token in blocks ${from}–${to} (${transfers.length} found).`
+      note = `${recent ? 'Recent transfers' : 'Transfers'} of this token in blocks ${from}–${to} (${transfers.length} found${recent && aroundBlock != null ? '; older blocks need a paid archive server' : ''}).`
     }
   } catch {
     return { transfers: [], signers, note: 'Could not read other transfers of this token right now.' }
@@ -113,4 +147,26 @@ export async function tokenSpread(chain: ChainKey, token: Hex, aroundBlock?: big
     }),
   )
   return { transfers, signers, note }
+}
+
+export interface TxIntel {
+  parties: { from: Hex; to: Hex | null } | null
+  creators: Map<Hex, Creator>
+  spreads: Map<Hex, Spread>
+}
+
+/** Signer of the tx, and for up to two suspicious tokens in it: creator and other targets. */
+export async function txIntel(r: TxReportOutput): Promise<TxIntel> {
+  const creators = new Map<Hex, Creator>()
+  const spreads = new Map<Hex, Spread>()
+  const suspects = r.tokens.filter((t) => t.verdict === 'FAKE USDT' || t.verdict === 'UNKNOWN').slice(0, 2)
+  const [parties] = await Promise.all([
+    r.blockNumber !== null ? txParties(r.chain, r.hash).catch(() => null) : Promise.resolve(null),
+    ...suspects.map(async (t) => {
+      const [c, sp] = await Promise.all([findCreator(r.chain, t.token), tokenSpread(r.chain, t.token, r.blockNumber)])
+      creators.set(t.token, c)
+      spreads.set(t.token, sp)
+    }),
+  ])
+  return { parties: parties ?? null, creators, spreads }
 }

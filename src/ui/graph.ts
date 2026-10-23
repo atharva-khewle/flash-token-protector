@@ -45,7 +45,7 @@ export interface BoardSpec {
 const NS = 'http://www.w3.org/2000/svg'
 const W = 210
 const H = 62
-const COL_GAP = 330
+const COL_GAP = 300
 const ROW_GAP = 92
 
 const EDGE_TEXT: Record<EdgeKind, string> = {
@@ -86,13 +86,20 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
   const id = `b${++boardSeq}`
   const usedKinds = [...new Set(spec.edges.map((e) => e.kind))]
 
-  // ---------- layout: columns left to right, rows centred ----------
+  // ---------- layout: columns left to right (top to bottom on a narrow board), empty columns dropped ----------
   const pos = new Map<string, { x: number; y: number }>()
   const cols = [...new Set(spec.nodes.map((n) => n.col))].sort((a, b) => a - b)
-  for (const c of cols) {
-    const inCol = spec.nodes.filter((n) => n.col === c)
-    inCol.forEach((n, i) => pos.set(n.id, { x: c * COL_GAP, y: (i - (inCol.length - 1) / 2) * ROW_GAP }))
+  const layout = (vertical: boolean) => {
+    cols.forEach((c, ci) => {
+      const inCol = spec.nodes.filter((n) => n.col === c)
+      inCol.forEach((n, i) => {
+        const along = (i - (inCol.length - 1) / 2) * (vertical ? W + 26 : ROW_GAP)
+        pos.set(n.id, vertical ? { x: along, y: ci * ROW_GAP * 1.9 } : { x: ci * COL_GAP, y: along })
+      })
+    })
   }
+  layout(false)
+  let laidOut = false
 
   // ---------- SVG skeleton ----------
   const root = svg('svg', { role: 'img', 'aria-label': `${spec.title}. Diagram with ${spec.nodes.length} boxes.` })
@@ -142,7 +149,9 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
         continue
       }
       // Parallel edges between the same two boxes fan out.
-      const bend = idx === 0 ? 0 : (idx % 2 ? 1 : -1) * Math.ceil(idx / 2) * 34
+      // Long arrows that would run behind the boxes in between curve around them.
+      const skips = Math.abs(b.x - a.x) > COL_GAP * 1.5 && Math.abs(b.y - a.y) < H ? 1 : Math.abs(b.y - a.y) > ROW_GAP * 2.5 && Math.abs(b.x - a.x) < W ? 1 : 0
+      const bend = (idx === 0 ? 0 : (idx % 2 ? 1 : -1) * Math.ceil(idx / 2) * 34) + skips * -(H + 40)
       const mx = (a.x + b.x) / 2
       const my = (a.y + b.y) / 2
       const dx = b.x - a.x
@@ -197,7 +206,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
     const maxX = Math.max(...xs) + W / 2 + 40
     const minY = Math.min(...ys) - H / 2 - 70
     const maxY = Math.max(...ys) + H / 2 + 40
-    const k = Math.max(0.25, Math.min(1.2, bw / (maxX - minX), bh / (maxY - minY)))
+    const k = Math.max(0.4, Math.min(1.15, bw / (maxX - minX), bh / (maxY - minY)))
     view = { k, x: bw / 2 - ((minX + maxX) / 2) * k, y: bh / 2 - ((minY + maxY) / 2) * k }
     applyView()
   }
@@ -367,14 +376,26 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
   applyView()
   showDefault()
   // Fit once the board has a size (it may be built before it is attached or while hidden).
-  const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => {
-    if (board.clientWidth > 0) {
-      fit()
-      ro?.disconnect()
-    }
-  }) : null
+  // Lay out for the board's real shape once it has one (it may be built while hidden).
+  const firstFit = () => {
+    if (laidOut || board.clientWidth === 0) return
+    laidOut = true
+    const widest = Math.max(...cols.map((c) => spec.nodes.filter((n) => n.col === c).length))
+    const vertical = board.clientWidth < 720 && widest <= Math.max(2, Math.floor(board.clientWidth / (W + 26)) + 1)
+    layout(vertical && cols.length > 2)
+    placeNodes()
+    drawEdges()
+    fit()
+  }
+  const ro =
+    typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => {
+          firstFit()
+          if (laidOut) ro?.disconnect()
+        })
+      : null
   ro?.observe(board)
-  queueMicrotask(fit)
+  queueMicrotask(firstFit)
 
   const legend = h(
     'ul',

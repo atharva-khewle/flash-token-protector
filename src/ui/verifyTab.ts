@@ -7,7 +7,10 @@ import { runVerify, type VerifyOutput } from '../services/verify'
 import { LAYER_NAMES } from '../verdict/types'
 import type { Hex } from '../chains/types'
 import { clear, field, h, maybeLink } from './dom'
-import { addr, badge, busy, chainSelect, note, statusIcon } from './common'
+import { addr, badge, busy, chainSelect, explorerLinks, note, statusIcon } from './common'
+import { verifyDiagram } from './diagrams'
+import { whiteboard } from './graph'
+import { txParties } from '../services/intel'
 import { renderProviders } from './providersView'
 import { summaryCard } from './summary'
 import { plainVerify } from '../verdict/plain'
@@ -75,7 +78,15 @@ export function verifyTab(): HTMLElement {
     busy(btn, true, 'Verify')
     try {
       const r = await runVerify({ chain: c, hash: ph.hash, hiddenChars: ph.hidden, context: { recipient: rec, amount: amt, notBefore: nb }, watchlist: watch })
-      out.appendChild(summaryCard(plainVerify(r), renderResult(r)))
+      const slot = h('div', {})
+      const draw = (parties?: { from: Hex; to: Hex | null } | null) => {
+        clear(slot)
+        slot.appendChild(whiteboard(verifyDiagram(r, parties)))
+      }
+      draw()
+      if (r.receipt) void txParties(c, r.hash).then(draw, () => undefined)
+      const links = explorerLinks(c, [{ kind: 'tx', value: r.hash }, ...(r.target ? [{ kind: 'address' as const, value: displayAddress(c, r.target), label: 'your address' }] : [])])
+      out.appendChild(summaryCard(plainVerify(r), renderResult(r), { links, board: slot }))
     } catch (e2) {
       out.appendChild(note(`Could not complete the check: ${e2 instanceof Error ? e2.message : String(e2)}. Result: UNVERIFIED.`, 'warn'))
     } finally {

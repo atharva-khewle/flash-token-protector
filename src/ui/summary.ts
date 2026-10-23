@@ -8,7 +8,11 @@ import { getMode } from './mode'
 const ICON = { good: '✓', caution: '!', danger: '✕' } as const
 const LEVEL = { good: 'Low risk', caution: 'Be careful', danger: 'High risk' } as const
 
-export function summaryCard(p: Plain, details: HTMLElement): HTMLElement {
+/**
+ * `links`: explorer links shown inside the card. `board`: the diagram (or a slot filled later),
+ * shown under the summary in both views.
+ */
+export function summaryCard(p: Plain, details: HTMLElement, extra: { links?: HTMLElement | null; board?: HTMLElement | null } = {}): HTMLElement {
   const dial = h('div', { class: `dial dial-${p.tone}`, role: 'img', 'aria-label': `Risk ${p.risk} out of 100: ${LEVEL[p.tone]}` }, h('span', { class: 'dialicon', 'aria-hidden': 'true' }, ICON[p.tone]))
   // CSSOM (allowed by the page CSP), not an inline style attribute.
   dial.style.setProperty('--pct', `${p.risk}%`)
@@ -32,8 +36,10 @@ export function summaryCard(p: Plain, details: HTMLElement): HTMLElement {
       ),
       p.points.length ? h('ul', { class: 'plainpoints' }, ...p.points.map((x) => h('li', {}, x))) : null,
       p.todo.length ? h('div', { class: 'plaintodo' }, h('strong', {}, 'What to do'), h('ul', {}, ...p.todo.map((x) => h('li', {}, x)))) : null,
+      extra.links ?? null,
       h('div', { class: 'plainfoot' }, toggle, h('span', { class: 'muted small' }, 'Summary made by fixed rules from the data below. Nothing is sent to an AI.')),
     ),
+    extra.board ?? null,
     holder,
   )
 }

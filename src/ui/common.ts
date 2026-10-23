@@ -1,6 +1,6 @@
 import { CHAIN_KEYS, CHAINS, type ChainKey } from '../registry/chains'
 import { charDiff } from '../lib/lookalike'
-import { h } from './dom'
+import { h, link } from './dom'
 
 export function chainSelect(initial: ChainKey = 'bsc'): HTMLSelectElement {
   const s = h('select', { name: 'chain' })
@@ -41,4 +41,27 @@ export function note(text: string, kind: 'info' | 'warn' | 'danger' = 'info'): H
 export function busy(btn: HTMLButtonElement, on: boolean, label: string): void {
   btn.disabled = on
   btn.textContent = on ? 'Checking…' : label
+}
+
+/** Opens a check panel with the value filled in and runs it (used by the diagrams). */
+export function openCheck(tab: 'scan' | 'token' | 'tx', chain: ChainKey, value: string): void {
+  document.getElementById(`tabbtn-${tab}`)?.click()
+  const form = document.querySelector<HTMLFormElement>(`#tab-${tab} form`)
+  if (!form) return
+  const sel = form.querySelector('select')
+  if (sel) sel.value = chain
+  form.querySelector<HTMLInputElement>('input')!.value = value
+  form.requestSubmit()
+  form.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+}
+
+/** "Open on BscScan" style links for a result. Built by the app from the chain registry. */
+export function explorerLinks(chain: ChainKey, items: { kind: 'tx' | 'address' | 'token'; value: string; label?: string }[]): HTMLElement | null {
+  const ex = CHAINS[chain].explorer
+  const links = items.flatMap((i) => {
+    const url = i.kind === 'tx' ? ex.tx(i.value) : ex.address(i.value)
+    const what = i.label ?? (i.kind === 'tx' ? 'transaction' : i.kind === 'token' ? 'token' : 'address')
+    return url ? [h('span', { class: 'explink' }, link(url, `View ${what} on ${ex.name}`))] : []
+  })
+  return links.length ? h('div', { class: 'explinks' }, ...links) : null
 }

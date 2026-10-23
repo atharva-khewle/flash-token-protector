@@ -6,7 +6,10 @@ import type { TokenVerdict } from '../verdict/tokenCheck'
 import { clear, field, h, maybeLink } from './dom'
 import { summaryCard } from './summary'
 import { plainToken } from '../verdict/plain'
-import { addr, badge, busy, chainSelect, diffAddress, note } from './common'
+import { addr, badge, busy, chainSelect, diffAddress, explorerLinks, note } from './common'
+import { tokenDiagram } from './diagrams'
+import { whiteboard } from './graph'
+import { findCreator, tokenSpread, type Creator, type Spread } from '../services/intel'
 
 const KIND: Record<TokenVerdict, string> = {
   'REAL USDT': 'ok',
@@ -41,7 +44,16 @@ export function tokenTab(): HTMLElement {
     busy(btn, true, 'Check token')
     try {
       const res = await runTokenCheck({ chain: c, token: p.hex })
-      out.appendChild(summaryCard(plainToken(res), render(c, p.display, p.hidden, res)))
+      const slot = h('div', {})
+      const draw = (intel?: { creator?: Creator; spread?: Spread }) => {
+        clear(slot)
+        slot.appendChild(whiteboard(tokenDiagram(res, intel)))
+      }
+      draw()
+      if (res.verdict !== 'REAL USDT') {
+        void Promise.all([findCreator(c, p.hex), tokenSpread(c, p.hex)]).then(([creator, spread]) => draw({ creator, spread }), () => undefined)
+      }
+      out.appendChild(summaryCard(plainToken(res), render(c, p.display, p.hidden, res), { links: explorerLinks(c, [{ kind: 'token', value: p.display }]), board: slot }))
     } catch (e2) {
       out.appendChild(note(`Could not complete the check: ${e2 instanceof Error ? e2.message : String(e2)}. This is not a confirmation that the token is real.`, 'warn'))
     } finally {

@@ -275,13 +275,28 @@ export function plainScan(r: ScanOutput): Plain {
     points.push('Someone else controls this Tron account\'s permissions. Funds sent here may be impossible to move.')
     todo.push('Do not send funds to this account. Do not pay any "fee" to unlock it.')
   }
+  const b = r.behavior
+  if (b.attacker.length > 0) {
+    risk += 60
+    points.unshift(`This address looks like it is attacking other wallets: ${b.attacker[0]}`)
+    todo.unshift('Do not send funds to this address and do not accept "payments" from it.')
+  }
   if (w.realIn.count + w.realOut.count > 0) {
     points.push(`Real USDT in the period checked: received ${w.realIn.total} (${plural(w.realIn.count, 'transfer')}), sent ${w.realOut.total} (${plural(w.realOut.count, 'transfer')}).`)
   } else {
     points.push('No real USDT moved in the period checked.')
   }
   risk = clamp(risk)
-  const title = risk < 30 ? 'Nothing worrying found.' : risk < 70 ? 'A few things to check.' : 'Warning signs found on this address.'
+  const title =
+    b.role === 'attacker' || b.role === 'both'
+      ? 'This address looks like an attacker.'
+      : b.role === 'victim' && risk >= 30
+        ? 'This address is being attacked.'
+        : risk < 30
+          ? 'Nothing worrying found.'
+          : risk < 70
+            ? 'A few things to check.'
+            : 'Warning signs found on this address.'
   if (todo.length === 0) todo.push('Nothing to do. Only recent history was checked, so this is not a guarantee.')
   return { tone: toneOf(risk), risk, title, points, todo }
 }

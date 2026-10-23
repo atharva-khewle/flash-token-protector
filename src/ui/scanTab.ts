@@ -7,7 +7,9 @@ import type { Hex } from '../chains/types'
 import { clear, field, h, maybeLink } from './dom'
 import { summaryCard } from './summary'
 import { plainScan } from '../verdict/plain'
-import { addr, badge, busy, chainSelect, diffAddress, note } from './common'
+import { addr, badge, busy, chainSelect, diffAddress, explorerLinks, note } from './common'
+import { scanDiagram } from './diagrams'
+import { whiteboard } from './graph'
 
 export function scanTab(): HTMLElement {
   const chain = chainSelect('bsc')
@@ -30,8 +32,23 @@ export function scanTab(): HTMLElement {
       .flatMap((x) => (x.ok ? [x.hex] : []))
     busy(btn, true, 'Analyze address')
     try {
-      const res = await runScan(c, p.hex, watch)
-      out.appendChild(summaryCard(plainScan(res), renderScan(res)))
+      const show = (res: ScanOutput) => {
+        clear(out)
+        const more = moreBar(res, async (b) => {
+          b.disabled = true
+          b.textContent = 'Reading older history…'
+          try {
+            show(await runScan(c, p.hex, watch, { prev: res }))
+          } catch (e3) {
+            b.disabled = false
+            b.textContent = 'Analyze older history'
+            b.after(note(`Could not read more: ${e3 instanceof Error ? e3.message : String(e3)}`, 'warn'))
+          }
+        })
+        const board = h('div', {}, roleCard(res), whiteboard(scanDiagram(res)), more)
+        out.appendChild(summaryCard(plainScan(res), renderScan(res), { links: explorerLinks(c, [{ kind: 'address', value: displayAddress(c, res.address) }]), board }))
+      }
+      show(await runScan(c, p.hex, watch))
     } catch (e2) {
       out.appendChild(note(`Scan failed: ${e2 instanceof Error ? e2.message : String(e2)}`, 'warn'))
     } finally {
@@ -42,9 +59,41 @@ export function scanTab(): HTMLElement {
   return h(
     'section',
     { class: 'tab', id: 'tab-scan' },
-    h('p', { class: 'lead' }, 'Find fake USDT, address-poisoning attempts, risky approvals and account takeovers on an address. Read-only.'),
+    h('p', { class: 'lead' }, 'Paste any wallet address. You see whether it is being attacked (fake USDT, poisoning, risky approvals) or is attacking others, with a map of who sent what to whom.'),
     form,
     out,
+  )
+}
+
+/** Two boxes: is this address being attacked, and is it attacking others? */
+function roleCard(r: ScanOutput): HTMLElement {
+  const b = r.behavior
+  const box = (kind: 'victim' | 'attacker', title: string, reasons: string[], none: string) =>
+    h(
+      'div',
+      { class: `rolebox r-${kind}${reasons.length ? ' on' : ''}` },
+      h('h4', {}, reasons.length ? `${title}: yes` : `${title}: no sign`),
+      reasons.length ? h('ul', {}, ...reasons.map((x) => h('li', {}, x))) : h('div', { class: 'muted small' }, none),
+    )
+  return h(
+    'div',
+    { class: 'rolecard' },
+    box('victim', 'Being attacked', b.victim, 'No poisoning, fake USDT or dust from strangers in the history checked.'),
+    box('attacker', 'Attacking others', b.attacker, 'No dust sprinkling, zero-value campaigns or fake-token spreading in the history checked.'),
+  )
+}
+
+/** How much history was read, and a button to read further back. */
+function moreBar(r: ScanOutput, more: (b: HTMLButtonElement) => void): HTMLElement {
+  const n = r.transfers.length
+  const btn = h('button', { type: 'button', class: 'primary' }, 'Analyze older history')
+  btn.addEventListener('click', () => more(btn))
+  const what = r.coverage[0] ?? ''
+  return h(
+    'div',
+    { class: 'morebar' },
+    h('div', {}, h('strong', {}, `${n} transfer${n === 1 ? '' : 's'} analyzed`), r.rounds > 1 ? ` in ${r.rounds} rounds` : '', h('div', { class: 'muted small' }, what)),
+    r.cursor ? btn : h('span', { class: 'muted small' }, 'That is all the history the free servers give for this address.'),
   )
 }
 

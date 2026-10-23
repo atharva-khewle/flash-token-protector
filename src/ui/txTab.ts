@@ -7,7 +7,10 @@ import { formatUnits } from '../verdict/transfer'
 import type { Headline, Level, ReportToken } from '../verdict/txReport'
 import type { TokenVerdict } from '../verdict/tokenCheck'
 import { clear, field, h, maybeLink } from './dom'
-import { addr, badge, busy, chainSelect, note } from './common'
+import { addr, badge, busy, chainSelect, explorerLinks, note } from './common'
+import { txDiagram } from './diagrams'
+import { whiteboard } from './graph'
+import { txIntel, type TxIntel } from '../services/intel'
 import { renderProviders } from './providersView'
 import { summaryCard } from './summary'
 import { plainTx } from '../verdict/plain'
@@ -93,9 +96,20 @@ function tokenBlock(r: TxReportOutput, t: ReportToken): HTMLElement {
   )
 }
 
-/** Plain summary on top, full report folded underneath. */
+/** Plain summary on top, then the diagram, full report folded underneath. */
 export function renderTxResult(r: TxReportOutput): HTMLElement {
-  return summaryCard(plainTx(r), renderReport(r))
+  const slot = h('div', {})
+  const draw = (intel?: TxIntel) => {
+    clear(slot)
+    slot.appendChild(whiteboard(txDiagram(r, intel)))
+  }
+  draw()
+  if (r.blockNumber !== null) void txIntel(r).then(draw, () => undefined)
+  const links = explorerLinks(r.chain, [
+    { kind: 'tx', value: r.hash },
+    ...r.tokens.filter((t) => t.verdict !== 'REAL USDT').slice(0, 2).map((t) => ({ kind: 'token' as const, value: displayAddress(r.chain, t.token), label: `“${(t.symbol ?? 'token').slice(0, 16)}” token` })),
+  ])
+  return summaryCard(plainTx(r), renderReport(r), { links, board: slot })
 }
 
 export function renderReport(r: TxReportOutput): HTMLElement {
