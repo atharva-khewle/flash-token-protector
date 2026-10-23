@@ -437,6 +437,7 @@ button.ghost {
   position: relative;
   height: clamp(320px, 52vh, 560px);
   margin-top: 10px;
+  border: 1.5px solid rgba(171, 159, 242, 0.55);
   border-radius: 14px;
   overflow: hidden;
   background: var(--bg);
@@ -1013,7 +1014,6 @@ button.ghost {
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   padding-right: 6px;
-  scrollbar-width: thin;
 }
 
 .vx-group {
@@ -1312,4 +1312,89 @@ button.ghost {
     background: rgba(171, 159, 242, 0.16);
     color: var(--accent);
   }
+}
+
+/* ---- Moving arrows ----
+   Bright dots travel along each arrow, from the box it leaves to the box it points at. */
+
+.gflow {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1 22;
+  pointer-events: none;
+  animation: gflow 1.1s linear infinite;
+  stroke: rgba(243, 243, 245, 0.75);
+}
+
+.gflow.f-real {
+  stroke: #c8f5dc;
+}
+
+.gflow.f-fake,
+.gflow.f-lookalike {
+  stroke: #ffd2cc;
+}
+
+.gflow.f-dust,
+.gflow.f-zero,
+.gflow.f-approval {
+  stroke: #ffe6b0;
+}
+
+.gflow.f-created {
+  stroke: #e4dfff;
+}
+
+.gflow.dim {
+  opacity: 0.1;
+}
+
+@keyframes gflow {
+  to {
+    stroke-dashoffset: -23;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gflow {
+    animation: none;
+    display: none;
+  }
+}
+
+/* ---- Purple scrollbars ---- */
+
+/* Chrome, Edge, Safari use the ::-webkit-scrollbar rules below (thin purple thumb, no arrow
+   buttons). Setting the standard properties there would switch those rules off, so they are only
+   applied where ::-webkit-scrollbar does not exist (Firefox). */
+@supports not selector(::-webkit-scrollbar) {
+  html,
+  .vx-picker {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) transparent;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(171, 159, 242, 0.7);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
 }

@@ -146,13 +146,15 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
       pairCount.set(key, idx + 1)
       const path = svg('path', { class: `gedge e-${e.kind}`, 'marker-end': `url(#${id}-arrow-${e.kind})` })
       const label = e.label ? svg('text', { class: 'gelabel', 'text-anchor': 'middle' }, cut(e.label, 34)) : null
-      edgeLayer.appendChild(path)
+      // A second, dotted copy of the line runs along it so the arrow visibly flows from start to end.
+      const flow = svg('path', { class: `gflow f-${e.kind}`, 'aria-hidden': 'true' })
+      edgeLayer.append(path, flow)
       if (label) edgeLayer.appendChild(label)
-      return { e, idx, path, label }
+      return { e, idx, path, flow, label }
     })
 
   const drawEdges = () => {
-    for (const { e, idx, path, label } of edgeEls) {
+    for (const { e, idx, path, flow, label } of edgeEls) {
       const a = pos.get(e.from)!
       const b = pos.get(e.to)!
       if (e.from === e.to) {
@@ -160,6 +162,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
         const x = a.x + W / 4
         const y = a.y - H / 2
         path.setAttribute('d', `M${x - 30},${y} C${x - 50},${y - 70} ${x + 50},${y - 70} ${x + 30},${y}`)
+        flow.setAttribute('d', path.getAttribute('d')!)
         label?.setAttribute('x', String(x))
         label?.setAttribute('y', String(y - 56))
         continue
@@ -191,6 +194,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
       const [sx, sy] = boxExit(a.x, a.y, cx, cy)
       const [ex, ey] = boxExit(b.x, b.y, cx, cy)
       path.setAttribute('d', `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`)
+      flow.setAttribute('d', path.getAttribute('d')!)
       if (label) {
         // A bent arrow carries its label on the outside of the bend, so fanned labels do not collide.
         const side = Math.sign(bend)
@@ -263,9 +267,10 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
       g.classList.toggle('selected', k === nid)
       g.classList.toggle('dim', !!nid && !linked.has(k))
     }
-    for (const { e, path, label } of edgeEls) {
+    for (const { e, path, flow, label } of edgeEls) {
       const on = !nid || e.from === nid || e.to === nid
       path.classList.toggle('dim', !on)
+      flow.classList.toggle('dim', !on)
       label?.classList.toggle('dim', !on)
     }
     if (!nid) return showDefault()
