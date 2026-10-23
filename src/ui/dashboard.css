@@ -556,7 +556,7 @@ button.ghost {
 }
 
 .gelabel {
-  font-size: 11px;
+  font-size: 13px;
   fill: var(--text);
   paint-order: stroke;
   stroke: var(--bg);
@@ -575,19 +575,19 @@ button.ghost {
 }
 
 .gnode .gtitle {
-  font-size: 12.5px;
+  font-size: 15px;
   font-weight: 700;
   fill: var(--text);
 }
 
 .gnode .gsub {
-  font-size: 11px;
+  font-size: 12.5px;
   fill: var(--muted);
   font-family: var(--mono);
 }
 
 .gnode .gbadge {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -838,5 +838,235 @@ button.ghost {
   }
   .board {
     height: 360px;
+  }
+}
+
+/* ---- Selected tabs fill completely ---- */
+
+.navbtn[aria-current='page'] {
+  background: var(--accent);
+  color: var(--accent-ink, #101214);
+  box-shadow: none;
+}
+
+.subtab[aria-selected='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink, #101214);
+}
+
+.subtab[aria-selected='true'] .subhint {
+  color: inherit;
+  opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+  .navbtn[aria-current='page'] {
+    background: var(--accent);
+  }
+}
+
+/* ---- Rotating token in the title, and the worry line ---- */
+
+.flashtok {
+  display: inline-block;
+  min-width: 3.6ch;
+  color: var(--accent);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.flashtok.out {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.brand .worry {
+  display: block;
+  max-width: 62ch;
+  line-height: 1.4;
+}
+
+@media (max-width: 520px) {
+  .brand .tagline.worry {
+    display: block;
+    font-size: 12px;
+  }
+}
+
+/* ---- Attack vectors ---- */
+
+.vx-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* Left: the list of attacks, scrolling on its own. Right: the diagram window. */
+.vx-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 5px;
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 2px 6px 2px 0;
+}
+
+.vx-group {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.vx-group:first-child {
+  margin-top: 0;
+}
+
+.vx-pick {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  text-align: left;
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13.5px;
+}
+
+.vx-pick[aria-current='true'] {
+  background: var(--accent);
+  color: var(--accent-ink, #101214);
+}
+
+.vx-pickid {
+  font-family: var(--mono);
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.vx-pickflag {
+  grid-column: 2;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.vx-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vx-top h3 {
+  margin: 0;
+  font-size: 18px;
+  flex: 1 1 200px;
+}
+
+.vx-id {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--panel-2);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.vx-sev {
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: var(--panel-2);
+}
+
+.sev-critical {
+  color: var(--bad);
+}
+
+.sev-high {
+  color: var(--warn);
+}
+
+.sev-medium,
+.sev-low {
+  color: var(--muted);
+}
+
+.vx-detailbox .board {
+  margin: 10px 0 14px;
+  height: clamp(480px, 72vh, 760px);
+}
+
+.vx-h {
+  margin: 16px 0 6px;
+  font-size: 15px;
+}
+
+.vx-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.vx-incident {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--panel-2);
+  border-left: 3px solid var(--warn);
+  border-radius: 10px;
+}
+
+.vx-incident h4 {
+  margin: 4px 0;
+  font-size: 15px;
+}
+
+.vx-incident p {
+  margin: 4px 0;
+}
+
+.vx-incidenttag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warn);
+}
+
+.vx-more {
+  margin-top: 12px;
+}
+
+.vx-more summary {
+  cursor: pointer;
+  color: var(--link);
+}
+
+.vx-detail p {
+  margin: 6px 0;
+}
+
+@media (max-width: 980px) {
+  .vx-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vx-picker {
+    position: static;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 760px) {
+  .vx-picker {
+    max-height: 180px;
+  }
+  .vx-detailbox .board {
+    height: 520px;
   }
 }

@@ -12,6 +12,7 @@ import { sendTab } from './sendTab'
 import { syncDetails } from './summary'
 import { tokenTab } from './tokenTab'
 import { txTab } from './txTab'
+import { vectorsTab } from './vectorsTab'
 import { verifyTab } from './verifyTab'
 import { walletTab, type WalletHooks } from './walletTab'
 import './style.css'
@@ -29,7 +30,6 @@ interface Leaf {
 interface Section {
   id: string
   label: string
-  icon: string
   title: string
   desc: string
   leaves: Leaf[]
@@ -43,7 +43,6 @@ const SECTIONS: Section[] = [
   {
     id: 'quick',
     label: 'Quick check',
-    icon: '⚡',
     title: 'Quick check',
     desc: 'Paste what you were given. You get a plain answer first; the technical details are one click away.',
     leaves: [
@@ -55,7 +54,6 @@ const SECTIONS: Section[] = [
   {
     id: 'detail',
     label: 'Detailed analysis',
-    icon: '◎',
     title: 'Detailed analysis',
     desc: 'Confirm a payment reached your own address, follow a wallet live, and check an address before you pay it.',
     leaves: [
@@ -66,9 +64,15 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: 'vectors',
+    label: 'Attack vectors',
+    title: 'Attack vectors',
+    desc: 'Every trick this tool defends against, drawn out: what the attacker does, what you see, and what catches it.',
+    leaves: [{ id: 'vectors', label: 'Attack vectors', hint: '', make: () => vectorsTab() }],
+  },
+  {
     id: 'faq',
     label: 'FAQ',
-    icon: '?',
     title: 'Questions and answers',
     desc: 'Short answers, in plain words.',
     leaves: [{ id: 'faq', label: 'FAQ', hint: '', make: () => faqTab() }],
@@ -159,6 +163,27 @@ function rulesCard(): HTMLElement {
   )
 }
 
+const FLASHABLE = ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'FDUSD', 'USDe']
+
+/** "Flash USDT Protector", with the token name rotating through the stablecoins that get faked. */
+function titleEl(): HTMLElement {
+  const tok = h('span', { class: 'flashtok', 'aria-hidden': 'true' }, FLASHABLE[0])
+  const t = h('h1', { 'aria-label': 'Flash Token Protector' }, h('span', { 'aria-hidden': 'true' }, 'Flash '), tok, h('span', { 'aria-hidden': 'true' }, ' Protector'))
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!still) {
+    let i = 0
+    setInterval(() => {
+      tok.classList.add('out')
+      setTimeout(() => {
+        i = (i + 1) % FLASHABLE.length
+        tok.textContent = FLASHABLE[i]!
+        tok.classList.remove('out')
+      }, 220)
+    }, 2200)
+  }
+  return t
+}
+
 function mount(root: HTMLElement, banner: HTMLElement | null): void {
   applyMode()
   const panels = new Map<string, HTMLElement>()
@@ -186,7 +211,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
   const nav = h('nav', { class: 'sidenav', 'aria-label': 'Sections' })
   const content = h('div', { class: 'content' })
   for (const s of SECTIONS) {
-    const nb = h('button', { type: 'button', class: 'navbtn', id: `navbtn-${s.id}` }, h('span', { class: 'navico', 'aria-hidden': 'true' }, s.icon), h('span', {}, s.label))
+    const nb = h('button', { type: 'button', class: 'navbtn', id: `navbtn-${s.id}` }, h('span', {}, s.label))
     nb.addEventListener('click', () => select(lastLeaf.get(s.id) ?? s.leaves[0]!.id))
     navBtns.set(s.id, nb)
     nav.appendChild(nb)
@@ -226,6 +251,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     { class: 'sidetrust' },
     h('div', { class: 'small' }, h('strong', {}, 'Read-only')),
     h('div', { class: 'muted small' }, 'No keys, no signatures, no accounts. Connecting a wallet only reads which address is selected.'),
+    h('div', { class: 'muted small' }, 'If a wallet warns about this site, that is a reputation flag on the domain, not on what the app does. It never asks for a signature. You can skip Connect and paste an address instead.'),
     h('div', { class: 'muted small domain' }, 'You are on ', h('strong', {}, location.host || 'local file'), '. Bookmark it.'),
   )
 
@@ -234,7 +260,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     h(
       'header',
       { class: 'topbar' },
-      h('div', { class: 'brand' }, h('span', { class: 'logo', 'aria-hidden': 'true' }), h('div', {}, h('h1', {}, 'Flash Token Protector'), h('div', { class: 'muted small tagline' }, 'Fund check for USDT on BSC, Ethereum and Tron'))),
+      h('div', { class: 'brand' }, h('span', { class: 'logo', 'aria-hidden': 'true' }), h('div', {}, titleEl(), h('div', { class: 'muted small tagline worry' }, 'Scared someone sent you flash USDT? Paste the transaction hash and see in seconds if it is real. Do not release goods or money until it says VERIFIED.'))),
       h('div', { class: 'topactions' }, modeSwitch(), openInTab(), isExtensionPage() ? null : connectButton(wallet, () => select('wallet'))),
     ),
     h('div', { class: 'shell' }, h('div', { class: 'sidebar' }, nav, trust), content),

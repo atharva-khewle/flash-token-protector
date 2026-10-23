@@ -40,11 +40,13 @@ export interface BoardSpec {
   edges: GEdge[]
   /** Extra line under the board, e.g. what was not fetched. */
   footnote?: string
+  /** 'down' always lays columns out top to bottom (reads like a story); default picks by board width. */
+  direction?: 'auto' | 'down'
 }
 
 const NS = 'http://www.w3.org/2000/svg'
-const W = 210
-const H = 62
+const W = 236
+const H = 70
 const COL_GAP = 300
 const ROW_GAP = 92
 
@@ -162,23 +164,41 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
         label?.setAttribute('y', String(y - 56))
         continue
       }
-      // Parallel edges between the same two boxes fan out.
-      // Long arrows that would run behind the boxes in between curve around them.
-      const skips = Math.abs(b.x - a.x) > COL_GAP * 1.5 && Math.abs(b.y - a.y) < H ? 1 : Math.abs(b.y - a.y) > ROW_GAP * 2.5 && Math.abs(b.x - a.x) < W ? 1 : 0
-      const bend = (idx === 0 ? 0 : (idx % 2 ? 1 : -1) * Math.ceil(idx / 2) * 34) + skips * -(H + 40)
+      // Parallel edges between the same two boxes fan out; an arrow that would pass behind another
+      // box bends until it clears every box (smallest bend that works).
+      const fan = idx === 0 ? 0 : (idx % 2 ? 1 : -1) * Math.ceil(idx / 2) * 56
       const mx = (a.x + b.x) / 2
       const my = (a.y + b.y) / 2
       const dx = b.x - a.x
       const dy = b.y - a.y
       const len = Math.hypot(dx, dy) || 1
-      const cx = mx + (-dy / len) * bend
-      const cy = my + (dx / len) * bend
+      const control = (bend: number) => [mx + (-dy / len) * bend, my + (dx / len) * bend] as const
+      const others = [...pos].filter(([k]) => k !== e.from && k !== e.to).map(([, p]) => p)
+      const clear = (bend: number) => {
+        const [qx, qy] = control(bend)
+        for (let i = 2; i <= 18; i++) {
+          const t = i / 20
+          const x = (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * qx + t * t * b.x
+          const y = (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * qy + t * t * b.y
+          if (others.some((o) => Math.abs(x - o.x) < W / 2 + 10 && Math.abs(y - o.y) < H / 2 + 10)) return false
+        }
+        return true
+      }
+      const step = Math.max(W, H) * 0.9
+      const tries = [0, 1, -1, 2, -2, 3, -3, 4, -4].map((k) => fan + k * step)
+      const bend = tries.find(clear) ?? fan
+      const [cx, cy] = control(bend)
       const [sx, sy] = boxExit(a.x, a.y, cx, cy)
       const [ex, ey] = boxExit(b.x, b.y, cx, cy)
       path.setAttribute('d', `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`)
       if (label) {
-        label.setAttribute('x', String((sx + 2 * cx + ex) / 4))
-        label.setAttribute('y', String((sy + 2 * cy + ey) / 4 - 6))
+        // A bent arrow carries its label on the outside of the bend, so fanned labels do not collide.
+        const side = Math.sign(bend)
+        const px = (-dy / len) * side
+        const py = (dx / len) * side
+        label.setAttribute('x', String((sx + 2 * cx + ex) / 4 + px * 8))
+        label.setAttribute('y', String((sy + 2 * cy + ey) / 4 - 6 + py * 8))
+        label.setAttribute('text-anchor', px > 0.3 ? 'start' : px < -0.3 ? 'end' : 'middle')
       }
     }
   }
@@ -188,9 +208,9 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
   for (const n of spec.nodes) {
     const g = svg('g', { class: `gnode k-${n.kind}`, tabindex: 0, role: 'button', 'aria-label': `${n.badge ?? ''} ${n.title} ${n.sub ?? ''}`.trim() })
     g.appendChild(svg('rect', { x: -W / 2, y: -H / 2, width: W, height: H, rx: 14 }))
-    if (n.badge) g.appendChild(svg('text', { x: -W / 2 + 14, y: -H / 2 + 17, class: `gbadge k-${n.kind}` }, cut(n.badge.toUpperCase(), 26)))
-    g.appendChild(svg('text', { x: -W / 2 + 14, y: n.badge ? 4 : -2, class: 'gtitle' }, cut(n.title, 26)))
-    if (n.sub) g.appendChild(svg('text', { x: -W / 2 + 14, y: n.badge ? 21 : 16, class: 'gsub' }, cut(n.sub, 30)))
+    if (n.badge) g.appendChild(svg('text', { x: -W / 2 + 14, y: -H / 2 + 19, class: `gbadge k-${n.kind}` }, cut(n.badge.toUpperCase(), 26)))
+    g.appendChild(svg('text', { x: -W / 2 + 14, y: n.badge ? 6 : -2, class: 'gtitle' }, cut(n.title, 26)))
+    if (n.sub) g.appendChild(svg('text', { x: -W / 2 + 14, y: n.badge ? 25 : 18, class: 'gsub' }, cut(n.sub, 30)))
     nodeLayer.appendChild(g)
     nodeEls.set(n.id, g)
   }
@@ -216,8 +236,8 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
     const xs = [...pos.values()].map((p) => p.x)
     const ys = [...pos.values()].map((p) => p.y)
     if (xs.length === 0) return
-    const minX = Math.min(...xs) - W / 2 - 40
-    const maxX = Math.max(...xs) + W / 2 + 40
+    const minX = Math.min(...xs) - W / 2 - 150
+    const maxX = Math.max(...xs) + W / 2 + 150
     const minY = Math.min(...ys) - H / 2 - 70
     const maxY = Math.max(...ys) + H / 2 + 40
     const k = Math.max(0.4, Math.min(1.15, bw / (maxX - minX), bh / (maxY - minY)))
@@ -225,7 +245,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
     applyView()
   }
   const zoomAt = (factor: number, px: number, py: number) => {
-    const k = Math.max(0.15, Math.min(3, view.k * factor))
+    const k = Math.max(0.03, Math.min(12, view.k * factor))
     view = { k, x: px - ((px - view.x) * k) / view.k, y: py - ((py - view.y) * k) / view.k }
     applyView()
   }
@@ -396,7 +416,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
     laidOut = true
     const widest = Math.max(...cols.map((c) => Math.min(PER, spec.nodes.filter((n) => n.col === c).length)))
     const vertical = board.clientWidth < 720 && widest <= Math.max(2, Math.floor(board.clientWidth / (W + 26)) + 1)
-    layout(vertical && cols.length > 2)
+    layout(spec.direction === 'down' || (vertical && cols.length > 2))
     placeNodes()
     drawEdges()
     fit()
