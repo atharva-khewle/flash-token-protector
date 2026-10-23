@@ -59,7 +59,6 @@ export function scanTab(): HTMLElement {
   return h(
     'section',
     { class: 'tab', id: 'tab-scan' },
-    h('p', { class: 'lead' }, 'Paste any wallet address. You see whether it is being attacked (fake USDT, poisoning, risky approvals) or is attacking others, with a map of who sent what to whom.'),
     form,
     out,
   )

@@ -46,7 +46,7 @@ export function savedTab(): HTMLElement {
   return h(
     'section',
     { class: 'tab', id: 'tab-saved' },
-    h('p', { class: 'lead' }, 'Save the addresses you use. Any address that looks almost the same as one of these gets flagged as a lookalike.'),
+    h('p', { class: 'lead' }, 'Lookalikes of these get flagged.'),
     box,
   )
 }

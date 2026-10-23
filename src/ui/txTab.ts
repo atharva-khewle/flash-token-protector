@@ -63,7 +63,6 @@ export function txTab(): HTMLElement {
   return h(
     'section',
     { class: 'tab', id: 'tab-tx' },
-    h('p', { class: 'lead' }, 'Paste only a transaction hash. This lists who sent what to whom, judges every token by its contract address, and says what looks wrong.'),
     form,
     out,
   )

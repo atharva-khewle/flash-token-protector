@@ -79,7 +79,7 @@ export function vectorsTab(): HTMLElement {
     for (const v of VECTORS.filter((x) => x.group === g && x.id !== DEFAULT_VECTOR)) picker.append(makeBtn(v))
   }
 
-  const root = h('div', { class: 'tab vx-root', id: 'tab-vectors' }, h('p', { class: 'lead' }, 'Pick an attack below. The board shows who does what and which funds move where, like the maps in your results. Drag the board, scroll or pinch to zoom.'), h('div', { class: 'vx-layout' }, picker, stage))
+  const root = h('div', { class: 'tab vx-root', id: 'tab-vectors' }, h('p', { class: 'lead' }, 'Pick an attack. Drag or zoom the map.'), h('div', { class: 'vx-layout' }, picker, stage))
   show(DEFAULT_VECTOR)
   return root
 }

@@ -97,7 +97,7 @@ export function verifyTab(): HTMLElement {
   return h(
     'section',
     { class: 'tab', id: 'tab-verify' },
-    h('p', { class: 'lead' }, 'Paste the tx hash the payer gave you. Checks run against the chain itself, not screenshots or links.'),
+    h('p', { class: 'lead' }, 'The payer\'s tx hash and your own address.'),
     form,
     out,
   )

@@ -30,6 +30,8 @@ interface Leaf {
 interface Section {
   id: string
   label: string
+  /** Label in the phone's bottom tab bar. */
+  short: string
   title: string
   desc: string
   leaves: Leaf[]
@@ -43,8 +45,9 @@ const SECTIONS: Section[] = [
   {
     id: 'quick',
     label: 'Quick check',
+    short: 'Check',
     title: 'Quick check',
-    desc: 'Paste what you were given. You get a plain answer first; the technical details are one click away.',
+    desc: 'Paste a hash or an address. Get a plain answer.',
     leaves: [
       { id: 'tx', label: 'Transaction', hint: 'A tx hash someone says paid you', make: () => txTab() },
       { id: 'scan', label: 'Wallet address', hint: 'Is this wallet attacked, or attacking?', make: () => scanTab() },
@@ -54,8 +57,9 @@ const SECTIONS: Section[] = [
   {
     id: 'detail',
     label: 'Detailed analysis',
+    short: 'Analysis',
     title: 'Detailed analysis',
-    desc: 'Confirm a payment reached your own address, follow a wallet live, and check an address before you pay it.',
+    desc: 'Checks for your own funds.',
     leaves: [
       { id: 'verify', label: 'Verify a payment', hint: 'Did real USDT reach my address?', make: () => verifyTab() },
       { id: 'wallet', label: 'Monitor a wallet', hint: 'Balance, history, live alerts', make: () => walletTab(wallet) },
@@ -66,13 +70,15 @@ const SECTIONS: Section[] = [
   {
     id: 'vectors',
     label: 'Attack vectors',
+    short: 'Attacks',
     title: 'Attack vectors',
-    desc: 'Every trick this tool defends against, drawn out: what the attacker does, what you see, and what catches it.',
+    desc: 'How each scam works, drawn out.',
     leaves: [{ id: 'vectors', label: 'Attack vectors', hint: '', make: () => vectorsTab() }],
   },
   {
     id: 'faq',
     label: 'FAQ',
+    short: 'FAQ',
     title: 'Questions and answers',
     desc: 'Short answers, in plain words.',
     leaves: [{ id: 'faq', label: 'FAQ', hint: '', make: () => faqTab() }],
@@ -127,24 +133,8 @@ function officialCard(): HTMLElement {
     'div',
     { class: 'card side' },
     h('h3', { class: 'flush' }, 'Official USDT contracts'),
-    h('p', { class: 'muted small' }, 'Real USDT is only these addresses. A token with any other address is not USDT, whatever its name says.'),
+    h('p', { class: 'muted small' }, 'Only these addresses are real USDT.'),
     h('ul', { class: 'official' }, ...rows),
-  )
-}
-
-function legendCard(): HTMLElement {
-  const row = (tone: string, label: string, text: string) => h('li', {}, h('span', { class: `lg lg-${tone}`, 'aria-hidden': 'true' }), h('div', {}, h('strong', {}, label), h('div', { class: 'muted small' }, text)))
-  return h(
-    'div',
-    { class: 'card side' },
-    h('h3', { class: 'flush' }, 'How to read a result'),
-    h(
-      'ul',
-      { class: 'legend' },
-      row('good', 'Low risk', 'Nothing worrying found. Still confirm the payment reached your own address.'),
-      row('caution', 'Be careful', 'Something is unclear or not final yet. Wait and check again.'),
-      row('danger', 'High risk', 'Fake token, failed or missing payment. Do not release funds.'),
-    ),
   )
 }
 
@@ -211,7 +201,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
   const nav = h('nav', { class: 'sidenav', 'aria-label': 'Sections' })
   const content = h('div', { class: 'content' })
   for (const s of SECTIONS) {
-    const nb = h('button', { type: 'button', class: 'navbtn', id: `navbtn-${s.id}` }, h('span', {}, s.label))
+    const nb = h('button', { type: 'button', class: 'navbtn', id: `navbtn-${s.id}`, 'aria-label': s.label }, h('span', { class: 'navlong' }, s.label), h('span', { class: 'navshort', 'aria-hidden': 'true' }, s.short))
     nb.addEventListener('click', () => select(lastLeaf.get(s.id) ?? s.leaves[0]!.id))
     navBtns.set(s.id, nb)
     nav.appendChild(nb)
@@ -234,8 +224,9 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
             }),
           )
         : null
-    const main = h('div', { class: 'sectionmain' }, h('div', { class: 'card workcard' }, subnav, ...leafPanels))
-    const aside = s.id === 'quick' ? h('aside', { class: 'sidecol' }, officialCard(), legendCard(), rulesCard()) : null
+    // Attack vectors flows on the page itself: its diagram is the only box.
+    const main = s.id === 'vectors' ? h('div', { class: 'sectionmain flat' }, ...leafPanels) : h('div', { class: 'sectionmain' }, h('div', { class: 'card workcard' }, subnav, ...leafPanels))
+    const aside = s.id === 'quick' ? h('aside', { class: 'sidecol' }, officialCard(), rulesCard()) : null
     const el = h(
       'section',
       { class: 'dsection', id: `section-${s.id}` },
@@ -250,9 +241,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     'div',
     { class: 'sidetrust' },
     h('div', { class: 'small' }, h('strong', {}, 'Read-only')),
-    h('div', { class: 'muted small' }, 'No keys, no signatures, no accounts. Connecting a wallet only reads which address is selected.'),
-    h('div', { class: 'muted small' }, 'If a wallet warns about this site, that is a reputation flag on the domain, not on what the app does. It never asks for a signature. You can skip Connect and paste an address instead.'),
-    h('div', { class: 'muted small domain' }, 'You are on ', h('strong', {}, location.host || 'local file'), '. Bookmark it.'),
+    h('div', { class: 'muted small' }, 'No keys, no signatures. Connecting only reads your address.'),
   )
 
   root.append(
@@ -260,15 +249,14 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     h(
       'header',
       { class: 'topbar' },
-      h('div', { class: 'brand' }, h('span', { class: 'logo', 'aria-hidden': 'true' }), h('div', {}, titleEl(), h('div', { class: 'muted small tagline worry' }, 'Scared someone sent you flash USDT? Paste the transaction hash and see in seconds if it is real. Do not release goods or money until it says VERIFIED.'))),
+      h('div', { class: 'brand' }, h('span', { class: 'logo', 'aria-hidden': 'true' }), h('div', {}, titleEl(), h('div', { class: 'muted small tagline worry' }, 'Got paid in USDT? Check it is real before you release anything.'))),
       h('div', { class: 'topactions' }, modeSwitch(), openInTab(), isExtensionPage() ? null : connectButton(wallet, () => select('wallet'))),
     ),
     h('div', { class: 'shell' }, h('div', { class: 'sidebar' }, nav, trust), content),
     h(
       'footer',
       { class: 'foot' },
-      h('p', {}, 'This tool never says "safe". VERIFIED means: canonical USDT reached your address in a final block, as reported by two independent RPC providers.'),
-      h('p', {}, 'It cannot see fiat chargebacks, a compromised device, or anything off-chain. Never share a seed phrase. Nobody legitimate needs it.'),
+      h('p', {}, 'Read-only. It never says "safe", only what the chain shows. Never share a seed phrase.'),
       h('p', {}, link(REPO, 'Source code and test evidence'), ' · ', link(`${REPO}/releases/latest`, 'Chrome extension'), ' · ', link(`${REPO}/blob/main/docs/PROOF.md`, 'Proof of work')),
     ),
   )

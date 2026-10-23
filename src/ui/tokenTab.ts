@@ -29,7 +29,7 @@ export function tokenTab(): HTMLElement {
     'form',
     { class: 'card form' },
     field('Chain', chain),
-    field('Token contract address', token, 'On BscScan this is the address on the token page, or the "Interacted With (To)" of a transfer. Not the wallet address and not the tx hash.'),
+    field('Token contract address', token, 'The token contract, not a wallet address or a tx hash.'),
     err,
     btn,
   )
@@ -64,7 +64,6 @@ export function tokenTab(): HTMLElement {
   return h(
     'section',
     { class: 'tab', id: 'tab-token' },
-    h('p', { class: 'lead' }, 'Paste a token contract address. It is real USDT only if it is exactly the official contract for that chain. The name and symbol on a token can be copied by anyone.'),
     form,
     out,
   )

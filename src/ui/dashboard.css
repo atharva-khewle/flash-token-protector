@@ -142,6 +142,12 @@ button.ghost {
 
 /* ---- Shell ---- */
 
+.navshort,
+.cwshort {
+  display: none;
+}
+
+
 .shell {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -786,30 +792,10 @@ button.ghost {
 @media (max-width: 860px) {
   .shell {
     grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
+    gap: 0;
   }
   .sidebar {
     position: static;
-  }
-  .sidenav {
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    background: var(--panel);
-    border-radius: 999px;
-    padding: 4px;
-  }
-  .navbtn {
-    justify-content: center;
-    border-radius: 999px;
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-  .navbtn[aria-current='page'] {
-    background: var(--panel-2);
-    box-shadow: none;
-  }
-  .navico {
-    display: none;
   }
   .sidetrust {
     display: none;
@@ -817,24 +803,139 @@ button.ghost {
   .addrow {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Sections move to an app-style tab bar fixed at the bottom of the screen. */
+  .sidenav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 0;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    background: rgba(27, 27, 29, 0.96);
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+  }
+  .navbtn,
+  .navbtn:hover:not(:disabled) {
+    justify-content: center;
+    border-radius: 12px;
+    padding: 10px 4px;
+    font-size: 13px;
+    background: none;
+    box-shadow: none;
+  }
+  .navbtn[aria-current='page'],
+  .navbtn[aria-current='page']:hover:not(:disabled) {
+    background: rgba(171, 159, 242, 0.16);
+    color: var(--accent);
+    box-shadow: none;
+  }
+  .navlong {
+    display: none;
+  }
+  .navshort {
+    display: inline;
+  }
+  main {
+    padding-bottom: 84px;
+  }
 }
 
 @media (max-width: 520px) {
+  /* One compact header: brand on the left, view switch and a short Connect on the right. */
   .topbar {
-    gap: 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 2px 0 12px;
+    margin-bottom: 14px;
+  }
+  .brand {
+    gap: 10px;
+  }
+  .brand h1 {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+  .logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+  .logo::after {
+    inset: 8px 9px;
+  }
+  .topactions {
+    width: auto;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .modeswitch {
+    padding: 3px;
+  }
+  .modebtn {
+    padding: 5px 9px;
+    font-size: 12.5px;
+  }
+  .connectbtn {
+    padding: 8px 13px;
+    font-size: 13.5px;
+  }
+  .cwlong {
+    display: none;
+  }
+  .cwshort {
+    display: inline;
   }
   .brand .tagline {
     display: none;
   }
-  .topactions {
-    width: 100%;
-    justify-content: space-between;
+  /* Sub-sections: a plain underlined strip, not a second row of buttons. */
+  .subtabs {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--line);
+    margin: 0 0 14px;
+  }
+  .subtabs::-webkit-scrollbar {
+    display: none;
+  }
+  .subtab,
+  .subtab:hover:not(:disabled),
+  .subtab:not([aria-selected='true']):hover:not(:disabled) {
+    flex: 0 0 auto;
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 8px 0 9px;
+    color: var(--muted);
+  }
+  .subtab[aria-selected='true'],
+  .subtab[aria-selected='true']:hover:not(:disabled) {
+    background: none;
+    border-color: transparent;
+    border-bottom-color: var(--accent);
+    color: var(--text);
+  }
+  .subtab .sublabel {
+    font-weight: 600;
+    font-size: 14.5px;
   }
   .subtab .subhint {
     display: none;
   }
-  .subtabs {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 96px), 1fr));
+  /* The work area sits on the page instead of in another box. */
+  .workcard {
+    background: none;
+    padding: 0;
   }
   .board {
     height: 360px;
@@ -886,42 +987,41 @@ button.ghost {
   line-height: 1.4;
 }
 
-@media (max-width: 520px) {
-  .brand .tagline.worry {
-    display: block;
-    font-size: 12px;
-  }
-}
 
-/* ---- Attack vectors ---- */
+/* ---- Attack vectors ----
+   No cards here: the list, the text and the steps sit on the page. The diagram is the only box. */
+
+.vx-root > .lead {
+  margin: 0 0 18px;
+  max-width: 75ch;
+}
 
 .vx-layout {
   display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 28px;
   align-items: start;
 }
 
-/* Left: the list of attacks, scrolling on its own. Right: the diagram window. */
+/* Left: an index of attacks, scrolling on its own. */
 .vx-picker {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: 5px;
   position: sticky;
   top: 12px;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
-  padding: 2px 6px 2px 0;
+  padding-right: 6px;
+  scrollbar-width: thin;
 }
 
 .vx-group {
-  grid-column: 1 / -1;
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 8px 0 0;
+  margin: 18px 0 6px;
 }
 
 .vx-group:first-child {
@@ -930,59 +1030,82 @@ button.ghost {
 
 .vx-pick {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 8px;
+  grid-template-columns: 40px 1fr;
+  gap: 0 6px;
+  width: 100%;
   text-align: left;
-  background: var(--panel-2);
-  border-radius: 10px;
-  border: 1px solid transparent;
-  padding: 8px 10px;
-  font-size: 13.5px;
+  background: none;
+  border: 0;
+  border-left: 2px solid var(--line);
+  border-radius: 0;
+  padding: 6px 4px 6px 12px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--muted);
 }
 
 .vx-pick[aria-current='true'] {
-  background: var(--accent);
-  color: var(--accent-ink, #101214);
+  border-left-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
 }
 
 .vx-pickid {
   font-family: var(--mono);
   font-size: 12px;
-  opacity: 0.8;
+  padding-top: 1px;
+  color: var(--muted);
+}
+
+.vx-pick[aria-current='true'] .vx-pickid {
+  color: var(--accent);
 }
 
 .vx-pickflag {
   grid-column: 2;
-  font-size: 11px;
-  opacity: 0.85;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Right: the story of one attack. */
+.vx-detailbox {
+  min-width: 0;
 }
 
 .vx-top {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .vx-top h3 {
   margin: 0;
-  font-size: 18px;
-  flex: 1 1 200px;
+  font-size: clamp(20px, 2.4vw, 26px);
+  letter-spacing: -0.01em;
+  flex: 1 1 240px;
 }
 
 .vx-id {
   font-family: var(--mono);
-  font-size: 12px;
-  background: var(--panel-2);
-  border-radius: 6px;
-  padding: 2px 7px;
+  font-size: 14px;
+  color: var(--accent);
 }
 
 .vx-sev {
-  font-size: 12px;
-  border-radius: 999px;
-  padding: 2px 10px;
-  background: var(--panel-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vx-sev::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 6px;
 }
 
 .sev-critical {
@@ -998,49 +1121,98 @@ button.ghost {
   color: var(--muted);
 }
 
+/* The board keeps its own box; everything around it is flat. */
+.vx-detailbox .boardcard {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
 .vx-detailbox .board {
-  margin: 10px 0 14px;
+  margin: 10px 0 12px;
   height: clamp(480px, 72vh, 760px);
 }
 
+.vx-detailbox .boardinfo {
+  background: none;
+  padding: 0;
+  margin-top: 8px;
+}
+
 .vx-h {
-  margin: 16px 0 6px;
-  font-size: 15px;
+  margin: 28px 0 10px;
+  font-size: 16px;
 }
 
+/* Steps as a numbered timeline. */
 .vx-steps {
+  list-style: none;
+  counter-reset: step;
   margin: 0;
-  padding-left: 22px;
+  padding: 0;
   display: grid;
-  gap: 6px;
+  gap: 14px;
 }
 
+.vx-steps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 40px;
+  min-height: 26px;
+}
+
+.vx-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(171, 159, 242, 0.14);
+}
+
+.vx-steps li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 28px;
+  bottom: -14px;
+  width: 2px;
+  background: var(--line);
+}
+
+/* Real-world case: a labelled paragraph, not a box. */
 .vx-incident {
-  margin-top: 16px;
-  padding: 12px 14px;
-  background: var(--panel-2);
-  border-left: 3px solid var(--warn);
-  border-radius: 10px;
+  margin-top: 28px;
 }
 
 .vx-incident h4 {
-  margin: 4px 0;
-  font-size: 15px;
+  margin: 4px 0 6px;
+  font-size: 16px;
 }
 
 .vx-incident p {
   margin: 4px 0;
+  max-width: 80ch;
 }
 
 .vx-incidenttag {
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--warn);
+  font-weight: 700;
 }
 
 .vx-more {
-  margin-top: 12px;
+  margin-top: 22px;
 }
 
 .vx-more summary {
@@ -1055,18 +1227,17 @@ button.ghost {
 @media (max-width: 980px) {
   .vx-layout {
     grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
   }
   .vx-picker {
     position: static;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    max-height: 220px;
+    max-height: 260px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
   }
 }
 
 @media (max-width: 760px) {
-  .vx-picker {
-    max-height: 180px;
-  }
   .vx-detailbox .board {
     height: 520px;
   }
@@ -1078,7 +1249,6 @@ button.ghost {
 
 .navbtn[aria-current='page']:hover:not(:disabled),
 .subtab[aria-selected='true']:hover:not(:disabled),
-.vx-pick[aria-current='true']:hover:not(:disabled),
 .pill[aria-pressed='true']:hover:not(:disabled),
 .filter[aria-pressed='true']:hover:not(:disabled) {
   background: var(--accent-hover);
@@ -1091,8 +1261,7 @@ button.ghost {
   color: var(--text);
 }
 
-.subtab:not([aria-selected='true']):hover:not(:disabled),
-.vx-pick:not([aria-current='true']):hover:not(:disabled) {
+.subtab:not([aria-selected='true']):hover:not(:disabled) {
   background: #36363d;
   border-color: rgba(171, 159, 242, 0.35);
 }
@@ -1100,4 +1269,47 @@ button.ghost {
 .modebtn:not([aria-pressed='true']):hover:not(:disabled) {
   background: none;
   color: var(--text);
+}
+
+/* Attack index: hover only brightens the text and the bar. */
+.vx-pick:hover:not(:disabled) {
+  background: none;
+  color: var(--text);
+  border-left-color: var(--muted);
+}
+
+.vx-pick[aria-current='true']:hover:not(:disabled) {
+  border-left-color: var(--accent);
+}
+
+/* ---- Phones: less text, and selections that read as tabs ---- */
+
+@media (max-width: 520px) {
+  .brand .tagline.worry,
+  .sectionhead p,
+  .field .hint,
+  .sidecol .card:not(:first-child) {
+    display: none;
+  }
+  .sectionhead h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  .subtabs .subtab[aria-selected='true'],
+  .subtabs .subtab[aria-selected='true']:hover:not(:disabled) {
+    background: none;
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .subtabs .subtab[aria-selected='true'] .sublabel {
+    color: var(--text);
+  }
+}
+
+@media (max-width: 860px) {
+  .sidenav .navbtn[aria-current='page'],
+  .sidenav .navbtn[aria-current='page']:hover:not(:disabled) {
+    background: rgba(171, 159, 242, 0.16);
+    color: var(--accent);
+  }
 }

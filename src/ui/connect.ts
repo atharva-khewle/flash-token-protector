@@ -43,7 +43,8 @@ export function connectButton(hooks: WalletHooks, show: () => void): HTMLElement
 
   const render = () => {
     const a = hooks.current?.()
-    btn.textContent = a ? short(displayAddress(a.chain, a.address)) : 'Connect wallet'
+    if (a) btn.textContent = short(displayAddress(a.chain, a.address))
+    else btn.replaceChildren(h('span', { class: 'cwlong' }, 'Connect wallet'), h('span', { class: 'cwshort', 'aria-hidden': 'true' }, 'Connect'))
     btn.classList.toggle('connected', !!a)
     btn.title = a ? `${a.via === 'wallet' ? 'Connected' : 'Watching'} (read-only)` : 'Optional. Read-only: never asks you to sign or send.'
   }

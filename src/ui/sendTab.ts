@@ -60,5 +60,5 @@ export function sendTab(): HTMLElement {
     }
   })
 
-  return h('section', { class: 'tab', id: 'tab-send' }, h('p', { class: 'lead' }, 'Before you send: is this address a lookalike of one you use?'), form, out)
+  return h('section', { class: 'tab', id: 'tab-send' }, form, out)
 }

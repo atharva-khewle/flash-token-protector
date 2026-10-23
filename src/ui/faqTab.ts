@@ -173,7 +173,7 @@ function items(): { group: string; list: Item[] }[] {
 }
 
 export function faqTab(): HTMLElement {
-  const root = h('section', { class: 'tab', id: 'tab-faq' }, h('p', { class: 'lead' }, 'Short answers to the common questions.'))
+  const root = h('section', { class: 'tab', id: 'tab-faq' }, null)
   for (const g of items()) {
     root.appendChild(h('h3', { class: 'faqgroup' }, g.group))
     for (const it of g.list) {

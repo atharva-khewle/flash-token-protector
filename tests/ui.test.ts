@@ -10,7 +10,7 @@ beforeAll(async () => {
 
 describe('UI', () => {
   it('renders three sections with their sub tabs and opens on the quick transaction check', () => {
-    const nav = [...document.querySelectorAll('.navbtn')].map((b) => b.textContent)
+    const nav = [...document.querySelectorAll('.navbtn .navlong')].map((b) => b.textContent)
     expect(nav).toEqual(['Quick check', 'Detailed analysis', 'Attack vectors', 'FAQ'])
     const tabs = [...document.querySelectorAll('[role=tab] .sublabel')].map((b) => b.textContent)
     expect(tabs).toEqual(['Transaction', 'Wallet address', 'Token address', 'Verify a payment', 'Monitor a wallet', 'Before you send', 'Saved addresses'])
