@@ -149,6 +149,16 @@ Your own addresses (for example your exchange deposit addresses), stored only in
 
 All 51 tricks this tool defends against, grouped (token identity, flash-USDT behaviours, transaction deception, address poisoning, approvals and account control, off-chain and infrastructure, other chains). Pick one from the list on the left and the diagram window on the right draws it: the attacker, the contracts they deploy, the victim, and which funds move where. Under the map: a numbered step-by-step story, how this tool catches it, and a **real-world case** with a link to the write-up (security firms, wallet makers or news sites). The most common one, a fake "Tether USD" token, opens first.
 
+### Hidden: the Tracker
+
+Click the logo ten times to unlock **Tracker**, a follow-the-money workspace. Paste or import (a `.txt`, `.csv` or `.json` file) one address or up to 40, pick how much history to read per wallet and how many hops to follow, and press **Analyze**. It reads each wallet's history (TronGrid pages on Tron; the explorer index on BSC/Ethereum when the site has a key, otherwise recent blocks), follows the biggest counterparties hop by hop, and draws the money flow left to right:
+
+- **Splitters** that fan money out to many wallets, **collectors** that gather it back from many, **pass-through** wallets (in ≈ out, typical of layering), and **destinations** where the money stops.
+- Wallets with more history than was read are marked busy (often an exchange) and not followed.
+- Filter by real USDT, all tokens or one token. Every map (here and in results) has a download button for all its addresses, and the Tracker exports the address list, the flows as CSV and the whole map as JSON.
+
+Free public servers limit how deep this goes: full on Tron (rate-limited, so large traces take a while), good on Ethereum with an explorer key, and only the last hour or two on BNB Chain without one.
+
 ### Connecting a wallet (optional)
 
 Connecting only asks your wallet one question: which account is selected (`eth_requestAccounts` / `eth_accounts`). The app refuses every other wallet request: it never asks for a signature, a transaction, a network switch or permission to spend tokens, and a test checks that no signing method appears anywhere in the source. You can always skip Connect and paste an address instead.

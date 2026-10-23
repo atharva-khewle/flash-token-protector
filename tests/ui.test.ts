@@ -10,7 +10,7 @@ beforeAll(async () => {
 
 describe('UI', () => {
   it('renders three sections with their sub tabs and opens on the quick transaction check', () => {
-    const nav = [...document.querySelectorAll('.navbtn .navlong')].map((b) => b.textContent)
+    const nav = [...document.querySelectorAll<HTMLElement>('.navbtn')].filter((b) => !b.hidden).map((b) => b.querySelector('.navlong')!.textContent)
     expect(nav).toEqual(['Quick check', 'Deep analysis', 'Attack vectors', 'FAQ'])
     const tabs = [...document.querySelectorAll('[role=tab] .sublabel')].map((b) => b.textContent)
     expect(tabs).toEqual(['Transaction', 'Wallet address', 'Token address', 'Verify a payment', 'Monitor a wallet', 'Before you send', 'Saved addresses'])
@@ -27,6 +27,18 @@ describe('UI', () => {
     expect((document.getElementById('section-faq') as HTMLElement).hidden).toBe(false)
     ;(document.getElementById('tabbtn-tx') as HTMLButtonElement).click()
     expect((document.getElementById('section-quick') as HTMLElement).hidden).toBe(false)
+  })
+
+  it('ten clicks on the logo unlock the hidden Tracker', () => {
+    const nb = document.getElementById('navbtn-tracker') as HTMLElement
+    expect(nb.hidden).toBe(true)
+    const logo = document.querySelector('.logo') as HTMLElement
+    for (let i = 0; i < 9; i++) logo.click()
+    expect(nb.hidden).toBe(true)
+    logo.click()
+    expect(nb.hidden).toBe(false)
+    expect((document.getElementById('section-tracker') as HTMLElement).hidden).toBe(false)
+    ;(document.getElementById('tabbtn-tx') as HTMLButtonElement).click()
   })
 
   it('starts in the simple view and can switch to advanced', () => {

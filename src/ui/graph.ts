@@ -153,7 +153,8 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
       return { e, idx, path, flow, label }
     })
 
-  const drawEdges = () => {
+  /** `fast` skips the bend search (used while a box is dragged, so big maps stay smooth). */
+  const drawEdges = (fast = false) => {
     for (const { e, idx, path, flow, label } of edgeEls) {
       const a = pos.get(e.from)!
       const b = pos.get(e.to)!
@@ -189,7 +190,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
       }
       const step = Math.max(W, H) * 0.9
       const tries = [0, 1, -1, 2, -2, 3, -3, 4, -4].map((k) => fan + k * step)
-      const bend = tries.find(clear) ?? fan
+      const bend = fast ? fan : (tries.find(clear) ?? fan)
       const [cx, cy] = control(bend)
       const [sx, sy] = boxExit(a.x, a.y, cx, cy)
       const [ex, ey] = boxExit(b.x, b.y, cx, cy)
@@ -356,7 +357,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
     } else if (drag.nid) {
       pos.set(drag.nid, { x: drag.ox + dx / view.k, y: drag.oy + dy / view.k })
       placeNodes()
-      drawEdges()
+      drawEdges(true)
     }
   })
   const up = (ev: PointerEvent) => {
@@ -364,6 +365,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
     if (pointers.size < 2) pinch = null
     board.classList.remove('dragging')
     if (drag && !drag.moved) select(drag.kind === 'node' ? drag.nid! : null)
+    if (drag?.kind === 'node' && drag.moved) drawEdges()
     drag = null
   }
   board.addEventListener('pointerup', up)
@@ -402,6 +404,7 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
       tool('+', 'Zoom in', () => zoomAt(1.25, ...centre())),
       tool('−', 'Zoom out', () => zoomAt(0.8, ...centre())),
       tool('⤢', 'Fit everything', fit),
+      tool('⤓', 'Download every address on this map (.txt)', () => downloadAddresses(spec)),
       tool('⛶', 'Full screen', () => {
         if (document.fullscreenElement) void document.exitFullscreen?.()
         else void board.requestFullscreen?.().then(() => setTimeout(fit, 120))
@@ -451,4 +454,19 @@ export function whiteboard(spec: BoardSpec): HTMLElement {
     info,
     spec.footnote ? h('p', { class: 'muted small' }, spec.footnote) : null,
   )
+}
+
+/** Every address on a map, one per line, as a file the Tracker (or anything else) can import. */
+export function downloadAddresses(spec: BoardSpec): void {
+  const list = [...new Set(spec.nodes.map((n) => n.address).filter((a): a is string => !!a))]
+  downloadText(`addresses-${list.length}.txt`, `${list.join('\n')}\n`, 'text/plain')
+}
+
+export function downloadText(name: string, text: string, type: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 2000)
 }

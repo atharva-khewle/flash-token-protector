@@ -11,6 +11,7 @@ import { scanTab } from './scanTab'
 import { sendTab } from './sendTab'
 import { syncDetails } from './summary'
 import { tokenTab } from './tokenTab'
+import { trackerTab } from './trackerTab'
 import { txTab } from './txTab'
 import { vectorsTab } from './vectorsTab'
 import { verifyTab } from './verifyTab'
@@ -35,9 +36,20 @@ interface Section {
   title: string
   desc: string
   leaves: Leaf[]
+  /** Not in the menu until unlocked (the Tracker: ten clicks on the logo). */
+  hidden?: boolean
 }
 
 const wallet: WalletHooks = {}
+
+const TRACKER_KEY = 'ftp.tracker'
+function trackerUnlocked(): boolean {
+  try {
+    return localStorage.getItem(TRACKER_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 // Three sections. The leaf ids (tab-tx, tabbtn-tx, ...) are what tests and the extension's
 // right-click menu address, so they stay stable whatever the layout.
@@ -74,6 +86,15 @@ const SECTIONS: Section[] = [
     title: 'Attack vectors',
     desc: 'How each scam works, drawn out.',
     leaves: [{ id: 'vectors', label: 'Attack vectors', hint: '', make: () => vectorsTab() }],
+  },
+  {
+    id: 'tracker',
+    label: 'Tracker',
+    short: 'Tracker',
+    title: 'Tracker',
+    desc: 'Follow the money across many wallets.',
+    hidden: true,
+    leaves: [{ id: 'tracker', label: 'Tracker', hint: '', make: () => trackerTab() }],
   },
   {
     id: 'faq',
@@ -204,6 +225,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     const nb = h('button', { type: 'button', class: 'navbtn', id: `navbtn-${s.id}`, 'aria-label': s.label }, h('span', { class: 'navlong' }, s.label), h('span', { class: 'navshort', 'aria-hidden': 'true' }, s.short))
     nb.addEventListener('click', () => select(lastLeaf.get(s.id) ?? s.leaves[0]!.id))
     navBtns.set(s.id, nb)
+    if (s.hidden && !trackerUnlocked()) nb.hidden = true
     nav.appendChild(nb)
 
     const leafPanels = s.leaves.map((l) => {
@@ -225,7 +247,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
           )
         : null
     // Attack vectors flows on the page itself: its diagram is the only box.
-    const main = s.id === 'vectors' ? h('div', { class: 'sectionmain flat' }, ...leafPanels) : h('div', { class: 'sectionmain' }, h('div', { class: 'card workcard' }, subnav, ...leafPanels))
+    const main = s.id === 'vectors' || s.id === 'tracker' ? h('div', { class: 'sectionmain flat' }, ...leafPanels) : h('div', { class: 'sectionmain' }, h('div', { class: 'card workcard' }, subnav, ...leafPanels))
     const aside = s.id === 'quick' ? h('aside', { class: 'sidecol' }, officialCard(), rulesCard()) : null
     const el = h(
       'section',
@@ -236,6 +258,23 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     sectionEls.set(s.id, el)
     content.appendChild(el)
   }
+
+  // Ten quick clicks on the logo unlock the Tracker (remembered in this browser).
+  const logo = h('span', { class: 'logo', 'aria-hidden': 'true' })
+  let clicks: number[] = []
+  logo.addEventListener('click', () => {
+    const now = Date.now()
+    clicks = [...clicks.filter((t) => now - t < 5000), now]
+    if (clicks.length < 10) return
+    clicks = []
+    try {
+      localStorage.setItem(TRACKER_KEY, '1')
+    } catch {
+      /* this visit only */
+    }
+    navBtns.get('tracker')!.hidden = false
+    select('tracker')
+  })
 
   const trust = h(
     'div',
@@ -249,7 +288,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
     h(
       'header',
       { class: 'topbar' },
-      h('div', { class: 'brand' }, h('span', { class: 'logo', 'aria-hidden': 'true' }), h('div', {}, titleEl(), h('div', { class: 'muted small tagline worry' }, 'Got paid in USDT? Check it is real before you release anything.'))),
+      h('div', { class: 'brand' }, logo, h('div', {}, titleEl(), h('div', { class: 'muted small tagline worry' }, 'Got paid in USDT? Check it is real before you release anything.'))),
       h('div', { class: 'topactions' }, modeSwitch(), openInTab(), isExtensionPage() ? null : connectButton(wallet, () => select('wallet'))),
     ),
     h('div', { class: 'shell' }, h('div', { class: 'sidebar' }, nav, trust), content),
@@ -264,7 +303,7 @@ function mount(root: HTMLElement, banner: HTMLElement | null): void {
   let start = 'tx'
   try {
     const saved = sessionStorage.getItem('ftp.leaf')
-    if (saved && panels.has(saved)) start = saved
+    if (saved && panels.has(saved) && (saved !== 'tracker' || trackerUnlocked())) start = saved
   } catch {
     /* optional */
   }
