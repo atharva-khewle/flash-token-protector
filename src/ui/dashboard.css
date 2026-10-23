@@ -935,6 +935,7 @@ button.ghost {
   text-align: left;
   background: var(--panel-2);
   border-radius: 10px;
+  border: 1px solid transparent;
   padding: 8px 10px;
   font-size: 13.5px;
 }
@@ -1069,4 +1070,34 @@ button.ghost {
   .vx-detailbox .board {
     height: 520px;
   }
+}
+
+/* ---- Hover never hides a selection ----
+   The generic button hover (grey) is more specific than the selected styles above, so a selected
+   item used to turn grey under the pointer. Selected items keep their fill and only lighten. */
+
+.navbtn[aria-current='page']:hover:not(:disabled),
+.subtab[aria-selected='true']:hover:not(:disabled),
+.vx-pick[aria-current='true']:hover:not(:disabled),
+.pill[aria-pressed='true']:hover:not(:disabled),
+.filter[aria-pressed='true']:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--accent-ink, #101214);
+}
+
+.modebtn[aria-pressed='true']:hover:not(:disabled) {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.subtab:not([aria-selected='true']):hover:not(:disabled),
+.vx-pick:not([aria-current='true']):hover:not(:disabled) {
+  background: #36363d;
+  border-color: rgba(171, 159, 242, 0.35);
+}
+
+.modebtn:not([aria-pressed='true']):hover:not(:disabled) {
+  background: none;
+  color: var(--text);
 }
