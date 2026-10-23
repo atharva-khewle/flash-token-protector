@@ -6,7 +6,7 @@ import type { Hex } from '../chains/types'
 import { displayAddress } from '../lib/address'
 import { familyOfAddress, parseAddress } from '../lib/input'
 import { CHAINS, type ChainKey } from '../registry/chains'
-import { crawl, type CrawlResult, type Follow } from '../services/trace'
+import { crawl, loadBalances, type CrawlResult, type Follow } from '../services/trace'
 import { buildTrace, fmtAmount, type TokenFilter, type TraceGraph, type TraceNode } from '../verdict/trace'
 import { canonicalUsdt } from '../registry/usdt'
 import { clear, field, h, link } from './dom'
@@ -56,7 +56,8 @@ function kindOf(n: TraceNode): NodeKind {
 
 export function trackerTab(): HTMLElement {
   let chain: ChainKey = 'tron'
-  let result: { crawl: CrawlResult; inputs: Hex[]; chain: ChainKey } | null = null
+  let result: { crawl: CrawlResult; inputs: Hex[]; chain: ChainKey; balances: Map<Hex, bigint | null> } | null = null
+  let balCtrl: AbortController | null = null
   let ctrl: AbortController | null = null
 
   // ---------- input ----------
@@ -166,7 +167,8 @@ export function trackerTab(): HTMLElement {
           fill.style.width = `${Math.min(100, Math.round((x.done / Math.max(1, x.total)) * 100))}%`
         },
       })
-      result = { crawl: r, inputs: p.ok, chain: c }
+      balCtrl?.abort()
+      result = { crawl: r, inputs: p.ok, chain: c, balances: new Map() }
       render()
     } catch (e) {
       out.appendChild(note(`Could not finish: ${e instanceof Error ? e.message : String(e)}`, 'warn'))
@@ -213,13 +215,15 @@ export function trackerTab(): HTMLElement {
     })
 
     const unit = token === 'usdt' ? ' USDT' : ''
+    const held = holdings(g, c, result.balances, r.busy)
     const stats = h(
       'div',
       { class: 'trk-stats' },
       stat(String(r.histories.size), 'wallets read'),
       stat(String(g.transfersSeen), 'transfers read'),
       stat(String(g.nodes.length), 'addresses on the map'),
-      g.decimals !== null ? stat(`${fmtAmount(g.moved, g.decimals)}${unit}`, 'moved along these flows', true) : null,
+      g.decimals !== null ? stat(`${fmtAmount(g.inflow, g.decimals)}${unit}`, 'entered these wallets from outside') : null,
+      held.stat,
     )
 
     const spec = traceBoard(g, c, (a) => addToList(a))
@@ -244,9 +248,80 @@ export function trackerTab(): HTMLElement {
       g.patterns.length ? h('ul', { class: 'trk-patterns' }, ...g.patterns.map((p) => h('li', {}, p))) : h('p', { class: 'muted' }, 'No transfers of this token between these wallets in the history read.'),
       whiteboard(spec),
       actions,
+      held.table,
       flows,
       h('ul', { class: 'muted small trk-notes' }, ...r.notes.map((n) => h('li', {}, n)), g.dropped ? h('li', {}, `${g.dropped} small one-off addresses were left off the map to keep it readable (still in the CSV).`) : null),
     )
+  }
+
+  /**
+   * "Held now": the current real-USDT balance of the wallets that were traced (history read),
+   * summed. If they belong to one operator, this is what it still controls, each dollar counted
+   * once. Other addresses on the map (funders, exchanges, not-followed receivers) and busy wallets
+   * are listed with their balance but not added: that is usually other people's money.
+   */
+  function holdings(g: TraceGraph, c: ChainKey, cache: Map<Hex, bigint | null>, busy: Set<Hex>): { stat: HTMLElement; table: HTMLElement } {
+    const usdt = canonicalUsdt(c)
+    const counts = (n: TraceNode) => n.fetched && !busy.has(n.address)
+    const counted = g.nodes.filter(counts).map((n) => n.address)
+    const value = h('div', { class: 'trk-statv' }, '…')
+    const label = h('div', { class: 'muted small' }, 'held now by these wallets (reading balances…)')
+    const statEl = h('div', { class: 'trk-stat accent' }, value, label)
+    const tb = h('tbody', {})
+    const table = h(
+      'details',
+      { class: 'trk-flows' },
+      h('summary', {}, `Balances of the ${g.nodes.length} addresses on the map`),
+      h('div', { class: 'txl-scroll' }, h('table', { class: 'tbl txl-table' }, h('thead', {}, h('tr', {}, h('th', {}, 'Address'), h('th', {}, 'Real USDT now'), h('th', {}, 'Counted'), h('th', {}, 'Role'))), tb)),
+    )
+    const paint = () => {
+      let sum = 0n
+      let read = 0
+      for (const a of counted) {
+        const v = cache.get(a)
+        if (v === undefined) continue
+        read++
+        if (v !== null) sum += v
+      }
+      value.textContent = `${fmtAmount(sum, usdt.decimals)} USDT`
+      label.textContent =
+        read < counted.length
+          ? `held now by the ${counted.length} traced wallets (${read} read…)`
+          : `held now by the ${counted.length} traced wallets (other addresses on the map are listed, not added)`
+      clear(tb)
+      const rows = [...g.nodes].sort((x, y) => {
+        const a = cache.get(x.address) ?? -1n
+        const b = cache.get(y.address) ?? -1n
+        return b > a ? 1 : b < a ? -1 : 0
+      })
+      for (const n of rows) {
+        const v = cache.get(n.address)
+        const shown = displayAddress(c, n.address)
+        tb.appendChild(
+          h(
+            'tr',
+            {},
+            h('td', {}, h('code', { class: 'addr', title: shown }, short(shown))),
+            h('td', { class: 'txl-amt real' }, v === undefined ? '…' : v === null ? 'unreadable' : `${fmtAmount(v, usdt.decimals)} USDT`),
+            h('td', { class: 'muted small' }, counts(n) ? 'yes' : busy.has(n.address) ? 'no: busy (likely an exchange)' : 'no: not traced'),
+            h('td', { class: 'muted small' }, roleText(n).toLowerCase() || '—'),
+          ),
+        )
+      }
+    }
+    paint()
+    const missing = g.nodes.map((n) => n.address).filter((a) => !cache.has(a))
+    if (missing.length) {
+      balCtrl?.abort()
+      const ctl = new AbortController()
+      balCtrl = ctl
+      let pending = 0
+      void loadBalances(c, missing, ctl.signal, (a, v) => {
+        cache.set(a, v)
+        if (++pending % 3 === 0 || pending === missing.length) paint()
+      })
+    }
+    return { stat: statEl, table }
   }
 
   function addToList(a: string): void {

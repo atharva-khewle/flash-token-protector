@@ -155,6 +155,7 @@ Click the logo ten times to unlock **Tracker**, a follow-the-money workspace. Pa
 
 - **Splitters** that fan money out to many wallets, **collectors** that gather it back from many, **pass-through** wallets (in ≈ out, typical of layering), and **destinations** where the money stops.
 - Wallets with more history than was read are marked busy (often an exchange) and not followed.
+- Two totals that count each dollar once. **Entered from outside**: money that came into the traced wallets from addresses outside them (hops between the traced wallets are not added again; summing every flow would count the same dollar once per hop). **Held now**: the live real-USDT balance of the traced wallets added together, i.e. what the operator still controls if they are one operator. Funders, exchanges and not-followed addresses are listed with their balances but not added.
 - Filter by real USDT, all tokens or one token. Every map (here and in results) has a download button for all its addresses, and the Tracker exports the address list, the flows as CSV and the whole map as JSON.
 
 Free public servers limit how deep this goes: full on Tron (rate-limited, so large traces take a while), good on Ethereum with an explorer key, and only the last hour or two on BNB Chain without one.

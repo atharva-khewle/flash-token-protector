@@ -51,9 +51,13 @@ export interface TraceGraph {
   flows: Flow[]
   /** Plain sentences about the patterns found, most important first. */
   patterns: string[]
-  /** Total of the selected token that moved along the flows on the map. */
-  moved: bigint
-  /** Decimals for `moved` (real USDT unless a single other token is selected). */
+  /**
+   * Selected token that entered the wallets whose history was read, from addresses outside that
+   * group. Each dollar is counted once, at the door: hops between the group's own wallets are not
+   * added again (summing every flow would count the same dollar once per hop).
+   */
+  inflow: bigint
+  /** Decimals for `inflow` (real USDT unless a single other token is selected). */
   decimals: number | null
   transfersSeen: number
   dropped: number
@@ -237,7 +241,7 @@ export function buildTrace(inp: TraceInput): TraceGraph {
   // 7. Patterns, in plain words.
   const single = filter !== 'all' && filter !== 'usdt' ? flows[0] : undefined
   const decimals = filter === 'usdt' ? usdt.decimals : filter === 'all' ? null : (single?.decimals ?? null)
-  const moved = filter === 'all' ? 0n : flows.reduce((s, f) => s + f.total, 0n)
+  const inflow = filter === 'all' ? 0n : transfers.reduce((s, t) => (fetched.has(t.to) && !fetched.has(t.from) ? s + t.value : s), 0n)
   const list = [...nodes.values()]
   const by = (f: (n: TraceNode) => bigint) => (x: TraceNode, y: TraceNode) => (f(y) > f(x) ? 1 : f(y) < f(x) ? -1 : 0)
   const patterns: string[] = []
@@ -261,7 +265,7 @@ export function buildTrace(inp: TraceInput): TraceGraph {
   if (unexplored) patterns.push(`${unexplored} address${unexplored === 1 ? '' : 'es'} received money but ${unexplored === 1 ? 'was' : 'were'} not followed further. Add hops or select ${unexplored === 1 ? 'it' : 'them'} to go deeper.`)
   if (busy.size) patterns.push(`${busy.size} wallet${busy.size === 1 ? ' has' : 's have'} more history than was read (often an exchange or payment service); not followed further.`)
 
-  return { nodes: list, flows, patterns, moved, decimals, transfersSeen: all.length, dropped }
+  return { nodes: list, flows, patterns, inflow, decimals, transfersSeen: all.length, dropped }
 }
 
 

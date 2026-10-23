@@ -2,6 +2,7 @@
 // Read-only and keyless: TronGrid pages on Tron; the explorer index on BSC/ETH when the site has a
 // key, otherwise recent windows of canonical-USDT logs from public RPCs.
 
+import { decodeFunctionResult, encodeFunctionData, erc20Abi } from 'viem'
 import { adapterFor } from '../chains'
 import type { EvmAdapter } from '../chains/evm'
 import type { TronAdapter } from '../chains/tron'
@@ -121,6 +122,41 @@ async function evmHistory(chain: ChainKey, me: Hex, pages: number, signal?: Abor
     to = from - 1n
   }
   return { list, more: false, source: 'rpc' }
+}
+
+/**
+ * Current real-USDT balance of each address (null when it could not be read). Slow and polite:
+ * a few at a time, retrying when the free servers rate-limit.
+ */
+export async function loadBalances(chain: ChainKey, addresses: Hex[], signal?: AbortSignal, onEach?: (a: Hex, v: bigint | null) => void): Promise<Map<Hex, bigint | null>> {
+  const a = adapterFor(chain)
+  const usdt = canonicalUsdt(chain)
+  const out = new Map<Hex, bigint | null>()
+  const width = CHAINS[chain].family === 'tron' ? 1 : 4
+  for (let i = 0; i < addresses.length; i += width) {
+    if (signal?.aborted) break
+    await Promise.all(
+      addresses.slice(i, i + width).map(async (who) => {
+        let v: bigint | null = null
+        try {
+          v = await patient(async () => {
+            const r = await a.call(usdt.hex, encodeFunctionData({ abi: erc20Abi, functionName: 'balanceOf', args: [who] }))
+            if (!r.ok) {
+              if (/429|rate|too many/i.test(r.error)) throw new Error(r.error)
+              return null
+            }
+            return r.data === '0x' ? null : decodeFunctionResult({ abi: erc20Abi, functionName: 'balanceOf', data: r.data })
+          }, signal)
+        } catch {
+          v = null
+        }
+        out.set(who, v)
+        onEach?.(who, v)
+      }),
+    )
+    if (width === 1) await sleep(250)
+  }
+  return out
 }
 
 /** Reads every input wallet, then follows the biggest counterparties for `hops` rounds. */

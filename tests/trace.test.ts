@@ -48,9 +48,19 @@ describe('follow the money', () => {
     for (const m of MULES) expect(node(m).roles).toContain('pass-through')
     expect(node(SINK).roles).toEqual(expect.arrayContaining(['collector', 'unexplored']))
     expect([node(SPLIT).layer, node(MULES[0]!).layer, node(SINK).layer]).toEqual([0, 1, 2])
-    expect(g.moved).toBe(u(3000) + u(2970))
+    // Only the splitter's history plus the mules' were read: nothing entered them from outside,
+    // and the 3,000 that hopped splitter -> mules -> sink is not counted twice.
+    expect(g.inflow).toBe(0n)
     expect(g.patterns.join(' ')).toMatch(/splits money to 3/)
     expect(g.patterns.join(' ')).toMatch(/3 addresses send to/)
+  })
+
+  it('counts money once at the door, however many hops it makes inside', () => {
+    const h = scenario()
+    const FUNDER = A(0x77)
+    h.set(SPLIT, [tx(FUNDER, SPLIT, u(3000)), ...h.get(SPLIT)!])
+    const g = buildTrace({ chain: 'tron', histories: h, inputs: [SPLIT] })
+    expect(g.inflow).toBe(u(3000))
   })
 
   it('counts a transfer once even when both wallets’ histories contain it', () => {
