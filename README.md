@@ -2,9 +2,10 @@
 
 [![ci](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml/badge.svg)](https://github.com/atharva-khewle/flash-token-protector/actions/workflows/ci.yml)
 
-[![Watch the 25 second demo](docs/media/launch-poster.jpg)](docs/media/launch.mp4)
 
-Demo video (click to open). Example values are illustrative. Music: Sascha Ende, ende.app (CC BY 4.0).
+https://github.com/user-attachments/assets/e378a71a-dd3a-4ff1-8aa3-d5daabe7a571
+
+
 
 A free, read-only website that tells you whether a USDT payment is real before you release goods or money. It is built for anyone who receives or sends USDT outside an exchange's own system: P2P traders, OTC desks, merchants, and the fund checkers at crypto companies. It works on **BNB Smart Chain (BEP20)**, **Ethereum (ERC20)** and **Tron (TRC20)**.
 
